@@ -19,6 +19,11 @@ for path in sorted(Path("src").rglob("*.py")):
 
     parts = tuple(module_path.parts)
 
+    ignore = ["_cli", "_version", "__init__", "__main__"]
+    skip = any(p in ignore for p in parts)
+    if skip:
+        continue
+
     if parts[-1] in ("__init__", "__main__"):
         continue
 

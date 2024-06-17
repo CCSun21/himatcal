@@ -1,5 +1,5 @@
 site_name: himatcal
-site_author: YourName
+site_author: Congcong Sun
 site_description: >-
   This is the himatcal package!
 nav:
@@ -33,7 +33,7 @@ nav:
       - example_docs/about/conduct.md
       - example_docs/about/license.md
 
-repo_url: https://github.com/Quantum-Accelerators/himatcal/
+repo_url: https://github.com/CCSun21/himatcal/
 edit_uri: blob/main/docs/
 
 theme:
@@ -120,3 +120,7 @@ plugins:
         - docs/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CCSun21/himatcal
