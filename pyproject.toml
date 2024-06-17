@@ -4,12 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "himatcal"
-description="A Python package description goes here."
-version = "0.0.1"
+description = "High throughput material calculation"
+version = "0.1.1"
 readme = "README.md"
 license = { text = "BSD-3" }
-authors = [{ name = "YourName", email = "YourName@email.com" }]
-keywords = ["MyKeyword1", "MyKeyword2"]
+authors = [{name = "Congcong Sun", email = "suncongcong000@foxmail.com"},]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -25,7 +24,9 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 requires-python = ">=3.10"
-dependencies = ["numpy"]
+dependencies = [
+    'quacc>=0.9.1', # quacc is a quantum chemistry calculation package
+    ]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.4.0", "pytest-cov>=3.0.0", "ruff>=0.0.285"]
@@ -37,14 +38,27 @@ docs = [
     "pillow>=10.0.0",
     "cairosvg>=2.7.1"
 ]
+aim2net = [
+    "torch>=2.1.2", 
+    "ase>=3.22.1"
+    ]
+mlp = [
+    "m3gnet>=0.2.4", 
+    "tensorflow>=2.14.0", 
+    "pathos>=0.3.2", 
+    "keras<=3.0"
+    ]
 
 [project.urls]
-repository = "https://github.com/Quantum-Accelerators/himatcal"
-documentation = "https://quantum-accelerators.github.io/himatcal/"
-changelog = "https://github.com/Quantum-Accelerators/himatcal/blob/main/CHANGELOG.md"
+repository = "https://github.com/CCSun21/himatcal"
+documentation = "https://CCSun21.github.io/himatcal/"
+changelog = "https://github.com/CCSun21/himatcal/blob/main/CHANGELOG.md"
 
 [tool.setuptools.package-data]
 himatcal = ["py.typed"]
+
+[project.scripts]
+himatcal = "himatcal._cli.cli:app"
 
 [tool.pyright]
 include = ["himatcal"]
