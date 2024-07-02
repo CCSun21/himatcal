@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from ase import Atoms
+from ase.io import write
 
 PF6 = Atoms(
     symbols="PF6",
@@ -57,17 +60,14 @@ def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
 
         filepath (str): The path of the temporary file
     """
-    import os
 
-    from ase.io import write
-
-    _CWD = os.getcwd()
+    _CWD = Path.cwd()
     if create_tmp_folder:
         from monty.os import makedirs_p
-
-        makedirs_p(f"{_CWD}/tmp")
-        filepath = os.path.join(f"{_CWD}/tmp", filename)
+        tmp_path = _CWD / "tmp"
+        makedirs_p(tmp_path)
+        filepath = _CWD / "tmp" / filename
     else:
-        filepath = os.path.join(_CWD, filename)
+        filepath = _CWD / filename
     write(filepath, atoms, format="xyz")
     return filepath
