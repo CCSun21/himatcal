@@ -48,6 +48,9 @@ mlp = [
     "pathos>=0.3.2", 
     "keras<=3.4.1"
     ]
+molecule[
+    "rdkit>=2024.3.1"
+]
 
 [project.urls]
 repository = "https://github.com/CCSun21/himatcal"

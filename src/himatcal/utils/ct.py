@@ -12,13 +12,17 @@ def extract_result(dispatch_id, return_atoms=True):    # sourcery skip: avoid-bu
     from monty.os import cd
     results = ct.get_result(dispatch_id)
     dispatch_id = results.dispatch_id
+    # create a folder with the dispatch_id
     os.makedirs(dispatch_id, exist_ok=True)
     with cd(dispatch_id):
         with open(f'{dispatch_id}.pkl','wb') as f:
             pkl.dump(results,f)
         try:
-            atoms = extract_gaussian_result(results, dispatch_id)
-            return atoms if return_atoms else results # return atoms or covalent results
+            if return_atoms:
+                return extract_gaussian_result(results, dispatch_id)
+            else:
+                extract_gaussian_result(results, dispatch_id)
+                return results # return covalent results
         except Exception:
             if results.status.__eq__(_Status__value='RUNNING'):
                 print('Job is still running')
