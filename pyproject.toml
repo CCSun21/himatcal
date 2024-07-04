@@ -48,7 +48,7 @@ mlp = [
     "pathos>=0.3.2", 
     "keras<=3.4.1"
     ]
-molecule[
+molecule = [
     "rdkit>=2024.3.1"
 ]
 
