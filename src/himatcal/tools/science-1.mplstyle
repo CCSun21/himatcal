@@ -1,0 +1,81 @@
+# Matplotlib style for plots
+
+# set the size of the figure to 12cm*8cm
+figure.figsize : 4.72440945, 3.1496063
+# set the dpi of the figure
+figure.dpi : 300
+
+# margins
+
+
+# set the font of the figure to calibri
+font.family: sans-serif
+font.sans-serif: Calibri
+font.size : 12
+font.weight: bold
+mathtext.fontset: custom
+mathtext.it: Calibri
+
+# set the line width to 1.5 ponds
+lines.linewidth : 1.5
+
+# set the title style
+axes.titleweight : bold
+axes.titlesize : 14
+
+axes.linewidth : 0.75
+axes.grid : True
+axes.grid.axis : y
+axes.grid.which : major
+axes.xmargin: 0.05
+#Grid
+grid.color : "#d9d9d9"
+grid.linestyle: --
+grid.linewidth: 0.75
+
+# set the label
+axes.labelsize : 14
+axes.labelweight : bold
+axes.labelcolor: black
+axes.unicode_minus : False
+
+#.set the x ticks
+xtick.direction : in
+xtick.major.size: 3
+xtick.major.width: 0.75
+xtick.minor.size : 1.5
+xtick.minor.width : 0.5
+xtick.minor.visible : False
+xtick.labelsize : 12
+xtick.labelcolor: black
+xtick.top : False
+
+# set the y ticks 
+ytick.direction: in
+ytick.major.size: 3
+ytick.major.width: 0.75
+ytick.minor.size : 1.5
+ytick.minor.width : 0.5
+ytick.minor.visible : False
+ytick.labelsize : 12
+ytick.labelcolor: black
+ytick.right : False
+
+# Set color cycle: blue, green, yellow, red, violet, gray
+axes.prop_cycle : cycler('color', ['000000', 'FF0000', '00B0F0', '00B050', 'C65911', '0033CC', 'C04FC9','FFFF00','44546A','375623'])
+
+#scatter
+lines.markersize : 5
+scatter.edgecolors : k
+
+# Always save as 'tight'
+savefig.bbox : tight
+savefig.pad_inches : 0.05
+
+# set the legend
+legend.fontsize : 12
+legend.labelcolor: black
+legend.frameon : False # Remove legend frame
+# Use LaTeX for math formatting
+#text.usetex : True
+#text.latex.preamble : \usepackage{amsmath} \usepackage{amssymb}
