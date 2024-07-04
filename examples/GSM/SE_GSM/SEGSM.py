@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 import os
 
 from ase.io import read
-from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
-from himatcal.utils.os import labeled_dir
 from monty.os import cd
 from xtb_ase import XTB
+from pathlib import Path
+from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
+from himatcal.utils.os import labeled_dir
 
-main_workdir = os.getcwd()
+main_workdir = Path.cwd()
 label = "IMI"
 atoms = read(f"{main_workdir}/input.xyz", ":")
 driving_coords = [["BREAK", 1, 4]]
