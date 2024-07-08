@@ -34,6 +34,7 @@ def xyz_to_mol(xyz_file, write_mol=True):
     Convert a xyz file to a mol file and block.
     """
     from openbabel import pybel as pb
+    # ! openbabel is a conda package, try other packages if openbabel is not available.
     mol = next(pb.readfile('xyz', xyz_file))
     if write_mol:
         mol.write('mol', f'{xyz_file}.mol', overwrite=True)
