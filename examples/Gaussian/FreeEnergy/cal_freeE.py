@@ -3,16 +3,16 @@ import uuid
 from ase.io import read
 from monty.os import cd
 from monty.serialization import loadfn
-
+from pathlib import Path
 from himatcal.recipes.gaussian.flow import calc_free_energy
 from himatcal.tools.db import save_to_db
 
 # Calculate the free energy of EC-POF3-c1s2
-workdir = "/home/suncc/Code/himatcal/examples/Gaussian/FreeEnergy"
-atoms = read(f"{workdir}/final.xyz")
-charge = 1
-mult = 2
-label = "EC-POF3-c1s2"
+workdir =Path.cwd()
+atoms = read(f"{workdir}/input.xyz")
+charge = 0
+mult = 1
+label = "EC-c0s1"
 
 with cd(workdir):
     free_energy = calc_free_energy(
