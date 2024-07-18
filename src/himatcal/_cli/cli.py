@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 
 app = typer.Typer(
     name="himatcal",
-    help="A CLI for Himatcal project",
+    help="A CLI for HiMatCal tool",
     no_args_is_help=True,
     rich_markup_mode="rich",
 )
@@ -32,6 +32,7 @@ def hello(name: Annotated[Optional[str], typer.Argument(help="test command")] = 
         return f"Hello, {name}!"
     else:
         print("Hello, world!")
+        return "Hello, world!"
 
 
 @app.command(
