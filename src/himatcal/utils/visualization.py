@@ -1,11 +1,11 @@
-# view the slab using py3Dmol
-import py3Dmol
-from ase.io import read, write
+""" functions using for visualization """
 
 def view_atoms(atoms, format='xyz'):
     """
     View the atoms in jupyter notebook using py3Dmol.
     """
+    import py3Dmol
+    from ase.io import read, write
     write('tmp_atoms', atoms, format=format)
     atoms_data = open('tmp_atoms', 'r').read()
     view = py3Dmol.view(width=800, height=400)
@@ -18,6 +18,7 @@ def show_xyz_mol(xyz_file):
     """
     Visualize a stk molecule using py3Dmol.
     """
+    import py3Dmol
     mol = open(xyz_file).read()
     p = py3Dmol.view(
         data = mol,
@@ -52,3 +53,15 @@ def plot_gasteiger_charges(mol):
     SimilarityMaps.GetSimilarityMapFromWeights(
         mol, contribs, colorMap='jet', contourLines=10
     )
+
+def init_style():
+    """
+    use the science style for matplotlib plots.
+    """
+    try:
+        import matplotlib.pyplot as plt
+        import pkg_resources
+        plt.style.use(pkg_resources.resource_filename("himatcal", "tools/science-1.mplstyle"))
+        plt.rcParams['font.family'] ='Calibri, Microsoft YaHei'
+    except ImportError:
+        print('matplotlib is not installed.')
