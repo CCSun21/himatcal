@@ -77,7 +77,7 @@ class HimatcalSettings(BaseSettings):
     SGHPC1_KEY_PATH: Path = Field("", description=("Path to the ssh key file of sghpc1"))
     YEESUAN_KEY_PATH: Path = Field("", description=("Path to the ssh key file of yeesuan"))
     XMU_KEY_PATH: Path = Field("", description=("Path to the ssh key file of XMU"))
-    
+
     # ---------------------------
     # MongoDB URI
     # ---------------------------
@@ -91,6 +91,11 @@ class HimatcalSettings(BaseSettings):
         """Load user settings"""
         return _type_handler(_use_custom_config_settings(settings))
 
+    # ---------------------------
+    # logging
+    # ---------------------------
+    DEBUG: bool = Field(
+        False, description=("Whether to enable debug logging"))
 
 def _use_custom_config_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Use custom settings from the config file"""
