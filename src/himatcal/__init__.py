@@ -1,4 +1,4 @@
-"""Init data for himatcal package."""
+"""himatcal package."""
 
 from __future__ import annotations
 

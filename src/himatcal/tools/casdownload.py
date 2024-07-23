@@ -3,10 +3,11 @@ import os
 from ase.io import read
 from chemspipy import ChemSpider
 from himatcal import SETTINGS
-
+from pydantic import Field
 
 def get_molecular_structure(
-    molecular_cas: str, chemspider_api: str = SETTINGS.CHEMSPIDER_API_KEY
+    molecular_cas: str = Field(None, description="CAS number"), 
+    chemspider_api: str = SETTINGS.CHEMSPIDER_API_KEY
 ):
     cs = ChemSpider(chemspider_api)
     c1 = cs.search(molecular_cas)[0]
