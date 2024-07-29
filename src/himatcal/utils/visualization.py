@@ -56,7 +56,7 @@ def xyz_to_mol(xyz_file, write_mol=True):
         mol.write("mol", f"{xyz_file}.mol", overwrite=True)
         return open(f"{xyz_file}.mol").read()
 
-# * Gasiteger charge visualization
+# * Gasteger charge visualization
 def plot_gasteiger_charges(mol):
     """
     Plot Gasteiger charges on a molecule.

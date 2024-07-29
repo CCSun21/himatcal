@@ -4,40 +4,34 @@ from __future__ import annotations
 
 import os
 import re
+from typing import TYPE_CHECKING
 
-from monty.os import makedirs_p
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
-def labeled_dir(main_workdir, label):
+def labeled_dir(main_workdir: Path, label: str):
     """
-    Create a new folder in the main_workdir with the label.
+    Create a new folder in the main working directory with the provided label.
 
     Args:
-
-        main_workdir (str): The main working directory.
+        main_workdir (Path): The main working directory.
         label (str): The label of the folder.
 
     Returns:
-
-        folder_path (str): The path of the new folder.
+        Path: The path of the new folder.
     """
-    # Get the folder names in main_workdir
-    folder_names = [
-        name
-        for name in os.listdir(main_workdir)
-        if os.path.isdir(os.path.join(main_workdir, name))
-    ]
-    numbers = [
+    folder_names = [p.name for p in main_workdir.iterdir() if p.is_dir()]
+    numbers = (
         int(re.search(r"\d+", name).group())
         for name in folder_names
         if re.search(r"\d+", name)
-    ]
-    new_number = max(numbers) + 1 if numbers else 1
+    )
+    new_number = max(numbers, default=0) + 1
     # Create new folder
     folder_name = f"{new_number:02d}.{label}"
-    folder_path = os.path.join(main_workdir, folder_name)
-    makedirs_p(folder_path)
-    print(f"Created new folder: {folder_path}")
+    folder_path = main_workdir / folder_name
+    Path.mkdir(folder_path, parents=True, exist_ok=True)
     return folder_path
 
 
