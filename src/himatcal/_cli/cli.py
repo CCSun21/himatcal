@@ -250,15 +250,14 @@ def extrcat_result(
 )
 def cas(
     cas: Annotated[str, typer.Argument(help="CAS number")],
-    write: Annotated[str, typer.Option(help="Write the structure to file")] = "xyz",
+    write: Annotated[bool, typer.Option(help="Write the structure to file")] = True,
 ):
     """
     Get molecular structure from CAS number
     """
     from himatcal.recipes.mol.core import get_molecular_structure
 
-    atoms = get_molecular_structure(molecular_cas=cas, write_to_file=write)
-    print(atoms)
+    get_molecular_structure(molecular_cas=cas, write_mol=write)
 
 
 if __name__ == "__main__":
