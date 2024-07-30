@@ -24,7 +24,7 @@ def relax(
     chg: int | None,
     mult: int | None,
     gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
-    alpb: str = "acetone",
+    alpb: str | None = None,
     threads: int = 4,
 ):
     """
