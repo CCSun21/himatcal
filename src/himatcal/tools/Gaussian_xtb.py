@@ -11,7 +11,7 @@ external='Gaussian_xtb.py'
 import os
 import sys
 
-import numpy as NP
+import numpy as np
 
 Method = "GFN2-xTB"
 chemical_symbols = [
@@ -158,12 +158,12 @@ NAtoms = int(splitline[0])
 Derives = int(splitline[1])
 Charge = int(splitline[2])
 Spin = int(splitline[3])
-Symbol = NP.zeros(NAtoms, dtype="<U3")
-X = NP.zeros(NAtoms, dtype="d")
-Y = NP.zeros(NAtoms, dtype="d")
-Z = NP.zeros(NAtoms, dtype="d")
-EmbedCharge = NP.zeros(NAtoms, dtype="d")
-Tag = NP.zeros(NAtoms, dtype=bool)
+Symbol = np.zeros(NAtoms, dtype="<U3")
+X = np.zeros(NAtoms, dtype="d")
+Y = np.zeros(NAtoms, dtype="d")
+Z = np.zeros(NAtoms, dtype="d")
+EmbedCharge = np.zeros(NAtoms, dtype="d")
+Tag = np.zeros(NAtoms, dtype=bool)
 ONIOM = False
 RealNAtoms = 0
 for i in range(NAtoms):
@@ -274,8 +274,8 @@ if Derives > 0:
                 j += 1
 
 if Derives > 1:
-    Hessian = NP.zeros(9 * NAtoms**2, dtype="d")
-    RealHessian = NP.zeros(9 * RealNAtoms**2, dtype="d")
+    Hessian = np.zeros(9 * NAtoms**2, dtype="d")
+    RealHessian = np.zeros(9 * RealNAtoms**2, dtype="d")
     with open(f"""{WorkDir}/hessian""", "r") as HessianFile:
         Text = HessianFile.readlines()
     cnt = 0

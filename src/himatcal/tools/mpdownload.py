@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import sys
 
 from mp_api.client import MPRester
+
 from himatcal import SETTINGS
 
 mpr = MPRester(api_key=SETTINGS.MAPI_KEY)
 # TODO: Add API key to the MPRester object
+
 
 def get_mp_formula(formula):
     structure = mpr.materials.summary.search(
@@ -76,28 +80,26 @@ def extract_mp_prop(MPdoc):
 
 def extract_mp_data(material_id, path):
     stru = mpr.materials.summary.search(material_ids=[material_id])
-    stru = stru[0].structure.to(
-        fmt="poscar", filename=path + "/" + material_id + ".vasp"
-    )
+    stru = stru[0].structure.to(fmt="poscar", filename=f"{path}/{material_id}.vasp")
 
 
-type = sys.argv[1]
-input = sys.argv[2]
+input_type = sys.argv[1]
+input_content = sys.argv[2]
 # if argv[3] is not None: path = sys.argv[3]
 if len(sys.argv) > 3 and sys.argv[3] is not None:
     path = sys.argv[3]
 
-if type == "formula":
-    data = get_mp_formula(input)
+if input_type == "chemsys":
+    data = get_mp_chemsys(input_content)
     extract_data = extract_mp_prop(data)
     print(extract_data)
-elif type == "id":
-    data = get_mp_id(input)
+elif input_type == "extract":
+    data = extract_mp_data(input_content, path)
+elif input_type == "formula":
+    data = get_mp_formula(input_content)
     extract_data = extract_mp_prop(data)
     print(extract_data)
-elif type == "chemsys":
-    data = get_mp_chemsys(input)
+elif input_type == "id":
+    data = get_mp_id(input_content)
     extract_data = extract_mp_prop(data)
     print(extract_data)
-elif type == "extract":
-    data = extract_mp_data(input, path)

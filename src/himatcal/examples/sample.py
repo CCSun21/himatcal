@@ -24,7 +24,6 @@ def add(a: float, b: float) -> float:
     float
         The sum of a and b.
     """
-    print("Hello from himatcal!")
     return a + b
 
 
