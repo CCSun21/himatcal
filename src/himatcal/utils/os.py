@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from pathlib import Path
 
 
 def labeled_dir(main_workdir: Path, label: str):
