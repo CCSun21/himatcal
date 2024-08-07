@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import uuid
+from pathlib import Path
 
 from ase.io import read
 from monty.os import cd
 from monty.serialization import loadfn
-from pathlib import Path
+
 from himatcal.recipes.gaussian.flow import calc_free_energy
 from himatcal.tools.db import save_to_db
 
@@ -15,9 +18,11 @@ mult = 1
 label = "EC-c0s1"
 
 with cd(workdir):
-    free_energy = calc_free_energy(
+    freeE = calc_free_energy(
         atoms, charge=charge, mult=mult, label=label, relax=False
     )
+    freeE.run()
+    free_energy = freeE.extract_free_energy()
 
 # Save the result to the database
 info = {
@@ -29,7 +34,7 @@ info = {
     "counter_ion": "POF3",
     "task_id": str(uuid.uuid4()),
     "quacc_results": loadfn(
-        "/home/suncc/Code/himatcal/examples/Gaussian/FreeEnergy/quacc-2024-06-14-02-13-29-893148-31118/quacc_results.json"
+        f"{workdir}/quacc-2024-06-14-02-13-29-893148-31118/quacc_results.json"
     ),
 }
 
