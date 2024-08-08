@@ -6,7 +6,7 @@ from pathlib import Path
 import matgl
 from ase import Atoms
 from ase.io import read, write
-from ase.neb import NEB, NEBTools
+from ase.mep import NEB, NEBTools
 from ase.optimize import FIRE
 from matgl.ext.ase import M3GNetCalculator, Relaxer
 from pathos.multiprocessing import ProcessingPool as Pool
@@ -137,6 +137,7 @@ class OgStructure:
         for i_site in range(len(structure)):
             if structure[i_site].specie.symbol == moving_atom_species:
                 neighbors = get_moving_atom_neighbors(structure[i_site])
+                logging.info(f"og:Full neighbors: {neighbors}")
                 logging.info(
                     f"og:Checking site, {i_site} Surrounded by {len(neighbors)}"
                 )
@@ -171,9 +172,9 @@ class DiffusionBarrierCal:
         self.parallel = parallel
         self._CWD = Path.cwd()
 
-    def relax(self, atoms):
+    def relax(self, atoms, relax_cell=False):
         pot = matgl.load_model("M3GNet-MP-2021.2.8-PES")
-        relaxer = Relaxer(potential=pot)
+        relaxer = Relaxer(potential=pot, relax_cell=relax_cell)
         relax_results = relaxer.relax(atoms, verbose=True, fmax=0.1)
         return pymatgen_to_ase(relax_results["final_structure"])
 
@@ -181,7 +182,7 @@ class DiffusionBarrierCal:
         """
         Generate the neb path using the OgStrucure and return the path of the neb path floders.
         """
-        self.structure = self.relax(atoms=self.atoms)
+        self.structure = self.relax(atoms=self.atoms, relax_cell=True)
         write("relaxed_atoms.vasp", self.structure)
         OgStructure(structure=self.structure).generate_neb(
             moving_atom_species=self.ion_type,
@@ -205,14 +206,13 @@ class DiffusionBarrierCal:
             tmp_data = read(f"{neb_path_floder}/0{i}.vasp")
             neb_data.append(tmp_data)
         neb_data[0] = self.relax(atoms=neb_data[0])
-        logging.info(f"type of neb_data[0]: {type(neb_data[0])}")
         neb_data[-1] = self.relax(atoms=neb_data[-1])
 
         # * neb calculation
         ## * 1. assign calculator to neb data
         images = []
         pot = matgl.load_model("M3GNet-MP-2021.2.8-PES")
-        calc = M3GNetCalculator(potential=pot, stress_weight=0.01)
+        calc = M3GNetCalculator(potential=pot, stress_weight=1 / 160.21766208)
 
         for i in neb_data:
             i.calc = calc
@@ -223,7 +223,7 @@ class DiffusionBarrierCal:
         qn = FIRE(neb, trajectory=f"{neb_path_floder}/neb.traj")
         try:
             logging.info(f"calculating image {neb_path_floder}")
-            qn.run(fmax=0.1)
+            qn.run(fmax=0.15)
         except Exception:
             logging.error(f"Error: neb calculation of image {neb_path_floder} failed.")
 
@@ -233,7 +233,8 @@ class DiffusionBarrierCal:
         for j in traj:
             j.calc = calc
             result.append(j)
-            logging.info(f"image {neb_path_floder} calculated.")
+        logging.info(f"image {neb_path_floder} calculated.")
+
         nebtools = NEBTools(result)
         Ef, dE = nebtools.get_barrier()
 
@@ -244,24 +245,24 @@ class DiffusionBarrierCal:
         """
         extract the Ea from the Ea.txt in the neb path floders
         """
-        with Path.open(Path("./Ea_result.txt"), "w") as f:
+        with Path.open(Path(f"{self._CWD}/Ea_result.txt"), "w") as f:
             E_sum = []
             for i in neb_path_floders:
                 try:
-                    logging.info(f"extracting Ea from {i}")
+                    logging.info(f"Extracting 'Ea' from {i}")
                     tmp_Ea = float(
-                        Path.open(Path(f"./{i}/Ea.txt"), "r")
+                        Path.open(Path(f"{i}/Ea.txt"), "r")
                         .readlines()[0]
                         .rstrip()
                         .split()[0]
                     )
                     logging.info(f"{i} Ea: {tmp_Ea}")
-                    f.write(f"{i}\t{tmp_Ea}\n")
+                    f.write(f"{i}: {tmp_Ea}\n")
                     E_sum.append(tmp_Ea)
                 except FileNotFoundError:
-                    f.write(f"{i}\tError: File not found\n")
+                    f.write(f"{i}: Error: File not found\n")
                 except ValueError:
-                    f.write(f"{i}\tError: Invalid value\n")
+                    f.write(f"{i}: Error: Invalid value\n")
             Ea = sum(E_sum) / len(E_sum)
             f.write(f"Ea: {Ea:.3f}")
         return Ea
@@ -275,7 +276,13 @@ class DiffusionBarrierCal:
         logging.info(f"neb_path_floders: {neb_path_floders}")
 
         # * 2. calculate diffusion barrier
-        pool = Pool(nodes=self.parallel)
+        # for folder in neb_path_floders:
+        #     logging.info(f"cal_diffusion_barrier {folder}")
+        #     try:
+        #         self.cal_diffusion_barrier(folder)
+        #     except Exception:
+        #         logging.error(f"Error: cal_diffusion_barrier {folder} failed.")
+        pool = Pool(nodes=min(self.parallel, len(neb_path_floders)))
         pool.map(self.cal_diffusion_barrier, neb_path_floders)
         logging.info("cal_diffusion_barrier done")
 
