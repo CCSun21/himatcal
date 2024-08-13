@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ase import Atoms
 from ase.io import write
+
+from himatcal.recipes.crest.core import relax
+
+if TYPE_CHECKING:
+    from typing import Literal
 
 PF6 = Atoms(
     symbols="PF6",
@@ -16,15 +22,149 @@ PF6 = Atoms(
         [7.617, 8.534, 8.484],
         [7.91, 7.908, 6.284],
     ],
-)  # the PF6 atoms type: ase.Atoms()
+)
 
 Li = Atoms(
     symbols="Li",
     positions=[[0, 0, 0]],
-)  # the Li atoms type: ase.Atoms()
+)
+
+Na = Atoms(
+    symbols="Na",
+    positions=[[0, 0, 0]],
+)
+
+elements = [
+    "",
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+    "Cu",
+    "Zn",
+    "Ga",
+    "Ge",
+    "As",
+    "Se",
+    "Br",
+    "Kr",
+    "Rb",
+    "Sr",
+    "Y",
+    "Zr",
+    "Nb",
+    "Mo",
+    "Tc",
+    "Ru",
+    "Rh",
+    "Pd",
+    "Ag",
+    "Cd",
+    "In",
+    "Sn",
+    "Sb",
+    "Te",
+    "I",
+    "Xe",
+    "Cs",
+    "Ba",
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Pm",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Lu",
+    "Hf",
+    "Ta",
+    "W",
+    "Re",
+    "Os",
+    "Ir",
+    "Pt",
+    "Au",
+    "Hg",
+    "Tl",
+    "Pb",
+    "Bi",
+    "Po",
+    "At",
+    "Rn",
+    "Fr",
+    "Ra",
+    "Ac",
+    "Th",
+    "Pa",
+    "U",
+    "Np",
+    "Pu",
+    "Am",
+    "Cm",
+    "Bk",
+    "Cf",
+    "Es",
+    "Fm",
+    "Md",
+    "No",
+    "Lr",
+    "Rf",
+    "Db",
+    "Sg",
+    "Bh",
+    "Hs",
+    "Mt",
+    "Ds",
+    "Rg",
+    "Uub",
+    "Uut",
+    "Uuq",
+    "Uup",
+    "Uuh",
+    "Uus",
+    "Uuo",
+]
 
 
-def dock_atoms(ship_atoms, dock_atoms=None, offset=1.5):
+def dock_atoms(
+    ship_atoms: Atoms,
+    dock_atoms: Atoms | Literal["PF6", "Li", "Na"] = "PF6",
+    offset: float = 1.5,
+    crest_relax: bool = True,
+    chg: int = 0,
+    mult: int = 1,
+):
     # TODO: this dock function is not general enough, it should be able to dock any two atoms
     """
     Dock the ship🚢 atoms to the dock⚓ atoms (default is PF6).
@@ -33,8 +173,11 @@ def dock_atoms(ship_atoms, dock_atoms=None, offset=1.5):
     -----------
     ship_atoms (ase.Atoms): The ship atoms.
     """
-    if dock_atoms is None:
-        dock_atoms = PF6.copy()
+    dock_atoms_dict = {"PF6": PF6.copy(), "Li": Li.copy(), "Na": Na.copy()}
+
+    if isinstance(dock_atoms, str):
+        dock_atoms = dock_atoms_dict.get(dock_atoms, dock_atoms)
+
     ship_atoms = ship_atoms.copy()
     ship_atoms_center = ship_atoms.get_center_of_mass()
     ship_atoms_center[0] = max(ship_atoms.positions.T[0])
@@ -44,6 +187,8 @@ def dock_atoms(ship_atoms, dock_atoms=None, offset=1.5):
     offset = [offset, 0, 0]
     dock_atoms.positions = dock_atoms.positions + vector + offset
     ship_atoms.extend(dock_atoms)
+    if crest_relax:
+        ship_atoms = relax(ship_atoms, chg=chg, mult=mult)
     return ship_atoms
 
 
@@ -64,6 +209,7 @@ def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
     _CWD = Path.cwd()
     if create_tmp_folder:
         from monty.os import makedirs_p
+
         tmp_path = _CWD / "tmp"
         makedirs_p(tmp_path)
         filepath = _CWD / "tmp" / filename
