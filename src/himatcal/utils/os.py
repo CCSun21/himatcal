@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import os
 import re
 from pathlib import Path
@@ -129,6 +128,7 @@ def cclib_result(log_path):
         result = cclib_result(Path("/path/to/logs"))
     """
 
+    import contextlib
     import gzip
 
     import cclib
