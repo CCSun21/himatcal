@@ -23,8 +23,10 @@ def view_atoms(atoms, fmt="xyz"):
     import py3Dmol
     from ase.io import write
 
-    write("tmp_atoms", atoms, format=fmt)
-    atoms_data = Path.open("tmp_atoms").read()
+    Path(".cache").mkdir(exist_ok=True)
+    tmp_path = Path(".cache/tmp_atoms")
+    write(tmp_path, atoms, format=fmt)
+    atoms_data = Path.open(tmp_path).read()
     view = py3Dmol.view(width=800, height=400)
     view.addModel(atoms_data, format)
     view.setStyle({"stick": {}})
