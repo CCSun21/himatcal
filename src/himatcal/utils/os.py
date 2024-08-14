@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 from pathlib import Path
@@ -108,3 +109,35 @@ def get_homo_lumo(logfile):
         "homo_lumo_gaps": gaps,
         "min_homo_lumo_gap": min_gap,
     }
+
+
+def cclib_result(log_path):
+    """Extracts and reads computational chemistry log files.
+
+    This function checks for compressed log files in the specified directory, decompresses the first found file, and reads the contents using the cclib library. It returns the parsed data from the log file.
+
+    Args:
+        log_path (Path): The directory path where log files are located.
+
+    Returns:
+        object: The parsed data from the log file.
+
+    Raises:
+        FileNotFoundError: If no log files are found and the directory is empty.
+
+    Examples:
+        result = cclib_result(Path("/path/to/logs"))
+    """
+
+    import gzip
+
+    import cclib
+
+    with contextlib.suppress(FileNotFoundError):
+        if gzip_log := list(log_path.glob("*.log.gz")):
+            unzip_file = gzip.decompress(Path.open(gzip_log[0], "rb").read())
+            logfile = gzip_log[0].with_suffix("")
+            with Path.open(logfile, "w") as f:
+                f.write(unzip_file.decode())
+        log_files = list(log_path.glob("*.log"))
+        return cclib.io.ccread(log_path / log_files[0])
