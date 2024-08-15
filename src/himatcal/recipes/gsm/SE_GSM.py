@@ -139,7 +139,6 @@ class ASE_SE_GSM:
             molecule=self.reactant,
             refE=self.reactant.energy,
             opt_steps=50,
-            # path=path
         )
 
     def run_gsm(self):
@@ -233,7 +232,7 @@ class ASE_SE_GSM:
                     self.gsm.nodes[minnodeP].primitive_internal_values,
                 )
             )
-            with Path.open(f"IC_data_{self.gsm.ID:04d}.txt", "w") as f:
+            with Path.open(Path(f"IC_data_{self.gsm.ID:04d}.txt"), "w") as f:
                 f.write(
                     f"Internals \t minnodeR: {minnodeR} \t TSnode: {self.gsm.TSnode} \t minnodeP: {minnodeP}\n"
                 )
@@ -255,7 +254,7 @@ class ASE_SE_GSM:
                     self.gsm.nodes[minnodeP].primitive_internal_values,
                 )
             )
-            with Path.open(f"IC_data_{self.gsm.ID}.txt", "w") as f:
+            with Path.open(Path(f"IC_data_{self.gsm.ID}.txt"), "w") as f:
                 f.write(f"Internals \t Beginning: {minnodeR} \t End: {self.gsm.TSnode}")
                 for x in zip(*ICs):
                     f.write("{}\t{}\t{}\n".format(*x))

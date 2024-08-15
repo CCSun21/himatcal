@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ase import Atoms
 
 
-def view_atoms(atoms, fmt="xyz"):
+def view_atoms(atoms:Atoms, fmt="xyz"):
     """
     View atoms using a 3D molecular viewer.
 
@@ -34,7 +38,7 @@ def view_atoms(atoms, fmt="xyz"):
     return view
 
 
-def show_xyz_mol(xyz_file):
+def show_xyz_mol(xyz_file:Path):
     """
     Visualize a stk molecule using py3Dmol.
     """
@@ -52,7 +56,7 @@ def show_xyz_mol(xyz_file):
     p.show()
 
 
-def xyz_to_mol(xyz_file, write_mol=True):
+def xyz_to_mol(xyz_file:Path, write_mol=True):
     """
     Convert a xyz file to a mol file and block.
     """

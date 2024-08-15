@@ -30,7 +30,7 @@ def write_general_input(
     preopt: bool = False,
     topo: bool = "False",
 ):
-    with Path.open("input.toml","w") as f:
+    with Path.open(Path("input.toml"),"w") as f:
         toml.dump(
             {
                 "input": input_type,
