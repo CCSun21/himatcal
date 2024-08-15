@@ -23,6 +23,19 @@ from pyGSM.utilities.cli_utils import plot as gsm_plot  # type: ignore
 
 class ASE_SE_GSM:
     def __init__(self, atom, driving_coords, calculator=None, cleanup_scratch=False):
+        """
+        Initializes the class with the specified atom and driving coordinates.
+
+        This constructor sets up the parameters necessary for the class, including the atom to be used, the driving coordinates for simulations, and an optional calculator for performing calculations. It also allows for the option to clean up temporary files created during the process.
+
+        Args:
+            atom: The atom to be used in the calculations.
+            driving_coords: A list of driving coordinates, formatted as [["BREAK", 2, 3]].
+            calculator: An optional calculator instance; if not provided, a default XTB calculator is used.
+            cleanup_scratch: A boolean indicating whether to clean up scratch files after computations.
+
+        """
+
         self.atom = atom
         self.driving_coords = driving_coords  # List: driving_coords = [["BREAK", 2, 3]]
         if calculator is None:
