@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from pathlib import Path
@@ -73,16 +74,53 @@ def extract_fchk(label, dzip=False):
     """
     if dzip:
         os.system("gzip -d Gaussian.chk.gz")
-    chk_file = "Gaussian.chk"
-    if not os.path.exists(chk_file):
-        print(f"{chk_file} not found")
+    chk_file = Path("Gaussian.chk")
+    if not Path.exists(chk_file):
+        logging.info(f"{chk_file} not found")
         return
     os.system(f"formchk {chk_file}")
     os.system(f"mv Gaussian.fchk {label}.fchk")
-    print(f"fchk file extracted for {label}")
+    logging.info(f"fchk file extracted for {label}")
 
 
-def get_homo_lumo(logfile):
+def get_homos_lumos(
+    moenergies: list[list[float]], homo_indices: list[int]
+) -> tuple[list[float], list[float], list[float]] | tuple[list[float], None, None]:
+    """
+    Calculate the HOMO, LUMO, and HOMO-LUMO gap energies in eV.
+
+    Parameters
+    ----------
+    moenergies
+        List of MO energies. For restricted calculations, List[List[float]] is
+        length one. For unrestricted, it is length two.
+    homo_indices
+        Indices of the HOMOs.
+
+    Returns
+    -------
+    homo_energies
+        The HOMO energies (eV), split by alpha and beta
+    lumo_energies
+        The LUMO energies (eV), split by alpha and beta
+    homo_lumo_gaps
+        The HOMO-LUMO gaps (eV), calculated as LUMO_alpha-HOMO_alpha and
+        LUMO_beta-HOMO_beta
+    """
+    homo_energies = [moenergies[i][h] for i, h in enumerate(homo_indices)]
+    # Make sure that the HOMO+1 (i.e. LUMO) is in moenergies (sometimes virtual
+    # orbitals aren't printed in the output)
+    for i, h in enumerate(homo_indices):
+        if len(moenergies[i]) < h + 2:
+            return homo_energies, None, None
+    lumo_energies = [moenergies[i][h + 1] for i, h in enumerate(homo_indices)]
+    homo_lumo_gaps = [
+        lumo_energies[i] - homo_energies[i] for i in range(len(homo_energies))
+    ]
+    return homo_energies, lumo_energies, homo_lumo_gaps
+
+
+def get_homo_lumo(log_path):
     """
     Extracts HOMO, LUMO, and related energies and gaps from a computational chemistry log file.
 
@@ -92,13 +130,11 @@ def get_homo_lumo(logfile):
     Returns:
         dict: A dictionary containing HOMO and LUMO orbitals, energies, gaps, and the minimum HOMO-LUMO gap.
     """
-    import cclib
-    from quacc.schemas.cclib import _get_homos_lumos
 
-    data = cclib.io.ccread(logfile)
+    data = cclib_result(log_path)
     HOMO = data.homos + 1
     LUMO = data.homos + 2
-    homo_energies, lumo_energies, gaps = _get_homos_lumos(data.moenergies, data.homos)
+    homo_energies, lumo_energies, gaps = get_homos_lumos(data.moenergies, data.homos)
     min_gap = min(gaps)
     return {
         "homo_orbital": HOMO,
