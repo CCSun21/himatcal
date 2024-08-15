@@ -34,12 +34,11 @@ class Gaussian:
                 print("Gaussian not found!")
                 exit()
 
-        if working_directory is not None:
+        if working_directory is not None and not os.path.exists(working_directory):
+            os.system(f"mkdir {working_directory}")
             if not os.path.exists(working_directory):
-                os.system(f"mkdir {working_directory}")
-                if not os.path.exists(working_directory):
-                    print("Defined working directory does not exist!!!")
-                    working_directory = None
+                print("Defined working directory does not exist!!!")
+                working_directory = None
 
         if working_directory is None:
             working_directory = os.getcwd()
@@ -56,10 +55,10 @@ class Gaussian:
 
     def __str__(self):
         content = ""
-        content = content + f"working_directory: {self.working_directory}\n"
-        content = content + f"command: {self.command}\n"
-        content = content + f"Energy: {self.energy_unit}\n\n"
-        content = content + f"###### qc_input ######\n{self.content}\n"
+        content += f"working_directory: {self.working_directory}\n"
+        content += f"command: {self.command}\n"
+        content += f"Energy: {self.energy_unit}\n\n"
+        content += f"###### qc_input ######\n{self.content}\n"
         return content
 
     def load_content(self, template_directory):

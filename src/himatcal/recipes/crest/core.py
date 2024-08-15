@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 def relax(
-    atoms: Atoms | None,
-    chg: int | None,
-    mult: int | None,
+    atoms: Atoms,
+    chg: int = 0,
+    mult: int = 1,
     gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
     alpb: str | None = None,
     threads: int = 4,
@@ -68,5 +68,42 @@ def relax(
     except FileNotFoundError:
         logger.error(
             "The relaxation did not complete successfully, please check the log file."
+        )
+        return None
+
+
+def protonate(
+    atoms: Atoms,
+    ion: str = "li+",
+    chg: int = 0,
+    mult: int = 1,
+    gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
+    alpb: str | None = None,
+    threads: int = 4,
+):
+    """
+    Protonate a structure using CREST, default is to protonate with Li
+    """
+    atoms_name = "input.xyz"
+    write(atoms_name, atoms)
+    uhf = mult - 1
+    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --protonate --swel {ion} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
+    if alpb:
+        protonate_cmd += f" -alpb {alpb}"
+    with Path.open(Path("crest_opt.sh"), "w") as f:
+        f.write(f"#!/bin/bash\n{protonate_cmd}")
+    log_file_path = Path("crest_opt.log")
+    with log_file_path.open("w") as log_file:
+        subprocess.run(
+            ["bash", "crest_opt.sh"],
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+    try:
+        return read("protonated.xyz", index=0)
+    except FileNotFoundError:
+        logger.error(
+            "The protonation did not complete successfully, please check the log file."
         )
         return None

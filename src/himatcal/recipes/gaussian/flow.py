@@ -112,20 +112,23 @@ class calc_free_energy:
         if not hasattr(self, "result"):
             raise AttributeError("Please run the calculation first!")
 
+        log_path = Path(self.result["dir_name"])
+        with contextlib.suppress(FileNotFoundError):
+            return self._extracted_from_extract_free_energy(log_path)
+
+    def _extracted_from_extract_free_energy(self, log_path):
         import gzip
 
         import cclib
 
-        log_path = Path(self.result["dir_name"])
-        with contextlib.suppress(FileNotFoundError):
-            if gzip_log := list(log_path.glob("*.log.gz")):
-                unzip_file = gzip.decompress(Path.open(gzip_log[0], "rb").read())
-                logfile = gzip_log[0].with_suffix("")
-                with Path.open(logfile, "w") as f:
-                    f.write(unzip_file.decode())
-            log_files = list(log_path.glob("*.log"))
-            data = cclib.io.ccread(log_path / log_files[0])
-            free_energy = data.freeenergy
-            with Path.open(log_path / "free_energy.txt", "w") as f:
-                f.write(f"{free_energy}")
-            return free_energy
+        if gzip_log := list(log_path.glob("*.log.gz")):
+            unzip_file = gzip.decompress(Path.open(gzip_log[0], "rb").read())
+            logfile = gzip_log[0].with_suffix("")
+            with Path.open(logfile, "w") as f:
+                f.write(unzip_file.decode())
+        log_files = list(log_path.glob("*.log"))
+        data = cclib.io.ccread(log_path / log_files[0])
+        free_energy = data.freeenergy
+        with Path.open(log_path / "free_energy.txt", "w") as f:
+            f.write(f"{free_energy}")
+        return free_energy
