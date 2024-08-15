@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from himatcal.atoms.core import PF6, dock_atoms
 from himatcal.recipes.crest.core import relax
+from himatcal.recipes.electrolyte.core import RedoxPotential
 
 if TYPE_CHECKING:
     from ase import Atoms
@@ -31,16 +33,16 @@ class RedoxCal(BaseModel):
     molecule: Atoms | None = (None,)
     chg_mult: list[int] = ([-1, 1, 0, 2, 1, 1, 0, 2],)
     add_anion: bool = (True,)
-    ions: list[Atoms | str] = [PF6, "li"]
+    ions: list[Atoms | str] = [PF6, "li"] # set [PF6, 'na'] for sodium solvent calculation
     calc_kwards: dict = {
-        "opt_method": "b3lyp",
+        "opt_xc": "b3lyp",
         "opt_basis": "6-311+G(d,p)",
-        "sol_method": "m062x",
+        "sol_xc": "m062x",
         "sol_basis": "6-31G*",
         "solvent": "Acetone",
     }
 
-    def get_ox(self) -> list[float]:
+    def get_ox(self):
         # * generate solvated molecules using anion and counter-ion
         if self.add_anion:
             neutral_molecule = dock_atoms(
@@ -66,5 +68,51 @@ class RedoxCal(BaseModel):
             )
         
         # * calculate the oxidation state energies (in eV)
-        
+        redox_potential = RedoxPotential(
+            neutral_molecule=neutral_molecule,
+            charged_molecule=charged_molecule,
+            chg_mult=self.chg_mult[:4],
+            calc_type="ox",
+            calc_kwards=self.calc_kwards,
+        ).cal_cycle()
+        return redox_potential
+    
+    def get_re(self):
+        # * generate solvated molecules using anion and counter-ion
+        if self.add_anion:
+            neutral_molecule = dock_atoms(
+                self.molecule,
+                dock_atoms=self.ions[1],
+                crest_relax=True,
+                chg=self.chg_mult[4],
+                mult=self.chg_mult[5],
+            )
+            charged_molecule = dock_atoms(
+                self.molecule,
+                dock_atoms=self.ions[1],
+                crest_relax=True,
+                chg=self.chg_mult[6],
+                mult=self.chg_mult[7],
+            )
+        else:
+            neutral_molecule = relax(
+                self.molecule, chg=self.chg_mult[4], mult=self.chg_mult[5]
+            )
+            charged_molecule = relax(
+                self.molecule, chg=self.chg_mult[6], mult=self.chg_mult[7]
+            )
 
+        # * calculate the oxidation state energies (in eV)
+        redox_potential = RedoxPotential(
+            neutral_molecule=neutral_molecule,
+            charged_molecule=charged_molecule,
+            chg_mult=self.chg_mult[4:8],
+            calc_type="re",
+            calc_kwards=self.calc_kwards,
+        ).cal_cycle()
+        return redox_potential
+
+    def get_redox(self):
+        oxidation_potential = self.get_ox()
+        reduction_potential = self.get_re()
+        return [oxidation_potential, reduction_potential]
