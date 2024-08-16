@@ -25,7 +25,7 @@ def relax(
     mult: int = 1,
     gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
     alpb: str | None = None,
-    threads: int = 4,
+    threads: int = 16,
 ):
     """
     Relax a molecular system using the CREST optimization program.
@@ -47,21 +47,18 @@ def relax(
     atoms_name = "input.xyz"
     write(atoms_name, atoms)
     uhf = mult - 1
-    crest_opt_cmd = [
-        str(SETTINGS.CREST_EXE_PATH_V3),
-        atoms_name,
-        "--opt",
-        f"--{gfn_level}",
-        f"-chrg {chg}",
-        f"-uhf {uhf}",
-        f"--T {threads}",
-    ]
+    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --opt --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
     if alpb:
-        crest_opt_cmd.extend(["-alpb", alpb])
+        protonate_cmd += f" -alpb {alpb}"
+    with Path.open(Path("crest_opt.sh"), "w") as f:
+        f.write(f"#!/bin/bash\n{protonate_cmd}")
     log_file_path = Path("crest_opt.log")
     with log_file_path.open("w") as log_file:
         subprocess.run(
-            crest_opt_cmd, stdout=log_file, stderr=subprocess.STDOUT, check=True
+            ["bash", "crest_opt.sh"],
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            check=True,
         )
     try:
         return read("crestopt.xyz")
@@ -71,6 +68,37 @@ def relax(
         )
         return None
 
+def iMTD_GC(
+    atoms: Atoms,
+    chg: int = 0,
+    mult: int = 1,
+    gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
+    alpb: str | None = None,
+    threads: int = 16,
+):
+    atoms_name = "input.xyz"
+    write(atoms_name, atoms)
+    uhf = mult - 1
+    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
+    if alpb:
+        protonate_cmd += f" -alpb {alpb}"
+    with Path.open(Path("crest_opt.sh"), "w") as f:
+        f.write(f"#!/bin/bash\n{protonate_cmd}")
+    log_file_path = Path("crest_opt.log")
+    with log_file_path.open("w") as log_file:
+        subprocess.run(
+            ["bash", "crest_opt.sh"],
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+    try:
+        return read("crest_best.xyz")
+    except FileNotFoundError:
+        logger.error(
+            "The computation did not finish successfully, please check the log file."
+        )
+        return None
 
 def protonate(
     atoms: Atoms,
@@ -79,7 +107,7 @@ def protonate(
     mult: int = 1,
     gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
     alpb: str | None = None,
-    threads: int = 4,
+    threads: int = 16,
 ):
     """
     Protonate a structure using CREST, default is to protonate with Li

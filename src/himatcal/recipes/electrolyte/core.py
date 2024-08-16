@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
-
-from pydantic import BaseModel
 
 from himatcal.recipes.gaussian.core import relax_job, static_job
 from himatcal.utils.os import cclib_result
@@ -11,21 +11,34 @@ if TYPE_CHECKING:
     from ase import Atoms
 
 
-class RedoxPotential(BaseModel):
-    neutral_molecule: Atoms | None = (None,)
-    charged_molecule: Atoms | None = (None,)
-    chg_mult: list[int] = ([-1, 1, 0, 2],) # * default for oxdiation potential calculation, for reduction, set [1, 1, 0, 2]
-    cal_type: Literal["ox", "re"] = ("ox",)
-    calc_kwards: dict = {
-        "opt_xc": "b3lyp",
-        "opt_basis": "6-311+G(d,p)",
-        "sol_xc": "m062x",
-        "sol_basis": "6-31G*",
-        "solvent": "Acetone",
-    }
+class RedoxPotential:
+    def __init__(
+        self,
+        neutral_molecule: Atoms | None = None,
+        charged_molecule: Atoms | None = None,
+        chg_mult: list[int]
+        | None = None,  # * default for oxdiation potential calculation, for reduction, set [1, 1, 0, 2]
+        calc_type: Literal["ox", "re"] = "ox",
+        calc_kwards: dict | None = None,
+    ):
+        if calc_kwards is None:
+            calc_kwards = {
+                "opt_xc": "b3lyp",
+                "opt_basis": "6-311+G(d,p)",
+                "sol_xc": "m062x",
+                "sol_basis": "6-31G*",
+                "solvent": "Acetone",
+            }
+        if chg_mult is None:
+            chg_mult = [-1, 1, 0, 2]
+        self.neutral_molecule = neutral_molecule
+        self.charged_molecule = charged_molecule
+        self.chg_mult = chg_mult
+        self.calc_type = calc_type
+        self.calc_kwards = calc_kwards
 
     # * 1. relax the molecule in low level of theory
-    def relax_llot(self, chg:int, mult:int, kwargs:dict):
+    def relax_llot(self, chg: int, mult: int, kwargs: dict):
         """
         low level of theory calculation for neutral and charged molecule, using for structure optimization and gibbs free energy correlation
         if using in solvent, please pass {"scrf": ["SMD", f"solvent={self.calc_kwards["solvent"}"]}  to kwargs
@@ -42,20 +55,21 @@ class RedoxPotential(BaseModel):
             "integral": "ultrafine",
             "nosymmetry": "",
             "pop": "CM5",
-            "ioplist": ["2/9=2000"]
-        }
-        calc_keywords = {**calc_keywords, **kwargs}
+            "ioplist": ["2/9=2000"],
+        } | kwargs
+        logging.info(f"Relaxing {chg} charge molecule in low level of theory")
         quacc_results = relax_job(
             self.molecule,
             charge=chg,
-            mult=mult,
+            spin_multiplicity=mult,
             freq=True,
-            **calc_keywords
+            **calc_keywords,
         )
-        cclib_results = cclib_result(quacc_results["dir_name"])
+        cclib_results = cclib_result(Path(quacc_results["dir_name"]))
+        logging.info(f"Relaxation of {chg} charge molecule in low level of theory done")
         return (quacc_results, cclib_results)
 
-    def sp_hlot(self, chg:int, mult:int, kwargs:dict):
+    def sp_hlot(self, chg: int, mult: int, kwargs: dict):
         """
         high level of theory single point energy calculation for neutral and charged molecule, using for gibbs the base of free energy
         if using in solvent, please pass {"scrf": ["SMD", f"solvent={self.calc_kwards["solvent"}"]}  to kwargs
@@ -71,19 +85,21 @@ class RedoxPotential(BaseModel):
             "integral": "ultrafine",
             "nosymmetry": "",
             "pop": "CM5",
-            "ioplist": ["2/9=2000"]
-        }
-        calc_keywords = {**calc_keywords, **kwargs}
+            "ioplist": ["2/9=2000"],
+        } | kwargs
+        logging.info(f"Calculating single point energy for {chg} charge molecule in high level of theory")
         quacc_results = static_job(
-            self.molecule,
-            charge=chg,
-            mult=mult,
-            **calc_keywords
+            self.molecule, charge=chg, spin_multiplicity=mult, **calc_keywords
         )
-        cclib_results = cclib_result(quacc_results["dir_name"])
+        cclib_results = cclib_result(Path(quacc_results["dir_name"]))
+        logging.info(f"Single point energy calculation for {chg} charge molecule in high level of theory done")
         return (quacc_results, cclib_results)
 
-    def cal_Gibbs(self, chg_status:Literal["neutral", "charged"], phase_status: Literal["gas", "solvent"]):
+    def cal_Gibbs(
+        self,
+        chg_status: Literal["neutral", "charged"],
+        phase_status: Literal["gas", "solvent"],
+    ):
         """
         calculate the Gibbs free energy from single point calculation and correlation from relax results
         """
@@ -96,23 +112,34 @@ class RedoxPotential(BaseModel):
             self.chg = self.chg_mult[2]
             self.mult = self.chg_mult[3]
         if phase_status == "solvent":
-            kwargs =  {
+            kwargs = {
                 "xc": self.calc_kwards["sol_xc"],
                 "basis": self.calc_kwards["sol_basis"],
-                "scrf": ["SMD", f"solvent={self.calc_kwards['solvent']}"]
-                }
+                "scrf": ["SMD", f"solvent={self.calc_kwards['solvent']}"],
+            }
         elif phase_status == "gas":
             kwargs = {
                 "xc": self.calc_kwards["opt_xc"],
                 "basis": self.calc_kwards["opt_basis"],
             }
-        # 1. * relax the molecule in low level of theory
-        relax_results, relax_cclib_results = self.relax_llot(chg=self.chg, mult=self.mult, kwargs=kwargs)
+        # * 1. relax the molecule in low level of theory
+        relax_results, relax_cclib_results = self.relax_llot(
+            chg=self.chg, mult=self.mult
+        )
         self.molecule = relax_results["atoms"]
-        # 2. * calculate the single point energy from low level of theory
-        sp_results, sp_cclib_results = self.sp_hlot(chg=self.chg, mult=self.mult, kwargs=kwargs)
-        
-        Gibbs_energy = sp_cclib_results.scfenergies + relax_cclib_results.dispersionenergies # ! fix this
+        # * 2.calculate the single point energy from low level of theory
+        sp_results, sp_cclib_results = self.sp_hlot(
+            chg=self.chg, mult=self.mult, kwargs=kwargs
+        )
+
+        Gibbs_energy = (
+            sp_cclib_results.scfenergies[0]
+            + relax_cclib_results.freeenergy * 27.211
+            - relax_cclib_results.scfenergies[0]
+        )  # ! fix this
+        logging.info(
+            f"{chg_status} molecule in {phase_status} phase Gibbs free energy: {Gibbs_energy} eV"
+        )
         return Gibbs_energy
 
     def cal_cycle(self):
@@ -121,11 +148,25 @@ class RedoxPotential(BaseModel):
         real_potential = potential - 1.44 eV
         """
         neutral_gas_gibbs = self.cal_Gibbs(chg_status="neutral", phase_status="gas")
-        neutral_solvent_gibbs = self.cal_Gibbs(chg_status="neutral", phase_status="solvent")
+        neutral_solvent_gibbs = self.cal_Gibbs(
+            chg_status="neutral", phase_status="solvent"
+        )
         charged_gas_gibbs = self.cal_Gibbs(chg_status="charged", phase_status="gas")
-        charged_solvent_gibbs = self.cal_Gibbs(chg_status="charged", phase_status="solvent")
-        if self.cal_type == "ox":
-            potential = charged_gas_gibbs - neutral_gas_gibbs - charged_solvent_gibbs + neutral_solvent_gibbs
-        if self.cal_type == "re":
-            potential = neutral_gas_gibbs - charged_gas_gibbs - neutral_solvent_gibbs + charged_solvent_gibbs
+        charged_solvent_gibbs = self.cal_Gibbs(
+            chg_status="charged", phase_status="solvent"
+        )
+        if self.calc_type == "ox":
+            potential = (
+                charged_gas_gibbs
+                - neutral_gas_gibbs
+                - charged_solvent_gibbs
+                + neutral_solvent_gibbs
+            )
+        if self.calc_type == "re":
+            potential = (
+                neutral_gas_gibbs
+                - charged_gas_gibbs
+                - neutral_solvent_gibbs
+                + charged_solvent_gibbs
+            )
         return potential - 1.44

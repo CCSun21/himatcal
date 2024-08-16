@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from ase import Atoms
 from ase.io import write
 
-from himatcal.recipes.crest.core import relax
+from himatcal.recipes.crest.core import relax, iMTD_GC
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -161,7 +161,7 @@ def dock_atoms(
     ship_atoms: Atoms,
     dock_atoms: Atoms | Literal["PF6", "Li", "Na"] = "PF6",
     offset: float = 1.5,
-    crest_relax: bool = True,
+    crest_sampling: bool = True,
     chg: int = 0,
     mult: int = 1,
 ):
@@ -187,8 +187,8 @@ def dock_atoms(
     offset = [offset, 0, 0]
     dock_atoms.positions = dock_atoms.positions + vector + offset
     ship_atoms.extend(dock_atoms)
-    if crest_relax:
-        ship_atoms = relax(ship_atoms, chg=chg, mult=mult)
+    if crest_sampling:
+        ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult)
     return ship_atoms
 
 

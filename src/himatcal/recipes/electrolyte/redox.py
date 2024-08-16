@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-import re
-from typing import TYPE_CHECKING
-
-from pydantic import BaseModel
+import logging
+from typing import TYPE_CHECKING, Optional
 
 from himatcal.atoms.core import PF6, dock_atoms
-from himatcal.recipes.crest.core import relax
+from himatcal.recipes.crest.core import protonate, relax
 from himatcal.recipes.electrolyte.core import RedoxPotential
 
 if TYPE_CHECKING:
     from ase import Atoms
 
 
-class RedoxCal(BaseModel):
+class RedoxCal:
     """
     RedoxCal is a class for managing and calculating redox potentials in molecular systems.
 
@@ -29,33 +27,54 @@ class RedoxCal(BaseModel):
 
     """
 
-    label: str = ("redox",)
-    molecule: Atoms | None = (None,)
-    chg_mult: list[int] = ([-1, 1, 0, 2, 1, 1, 0, 2],)
-    add_anion: bool = (True,)
-    ions: list[Atoms | str] = [PF6, "li"] # set [PF6, 'na'] for sodium solvent calculation
-    calc_kwards: dict = {
-        "opt_xc": "b3lyp",
-        "opt_basis": "6-311+G(d,p)",
-        "sol_xc": "m062x",
-        "sol_basis": "6-31G*",
-        "solvent": "Acetone",
-    }
+    def __init__(
+        self,
+        molecule: Atoms | None = (None,),
+        chg_mult: list[int] | None = None,
+        add_ion: bool = (True,),
+        ions: list[Atoms | str]
+        | None = None,  # set [PF6, 'na'] for sodium solvent calculation
+        label: str = ("redox",),
+        calc_kwards: dict | None = None,
+        machine_kwards: dict | None = None,
+    ):
+        if chg_mult is None:
+            chg_mult = [-1, 1, 0, 2, 1, 1, 0, 2]
+        if ions is None:
+            ions = [PF6, "li"]
+        if calc_kwards is None:
+            calc_kwards = {
+                "opt_xc": "b3lyp",
+                "opt_basis": "6-311+G(d,p)",
+                "sol_xc": "m062x",
+                "sol_basis": "6-31G*",
+                "solvent": "Acetone",
+            }
+        if machine_kwards is None:
+            machine_kwards = {"xtb_proc": 16}
+        self.molecule = molecule
+        self.chg_mult = chg_mult
+        self.add_ion = add_ion
+        self.ions = ions
+        self.label = label
+
+        self.calc_kwards = calc_kwards
+        self.machine_kwards = machine_kwards
 
     def get_ox(self):
         # * generate solvated molecules using anion and counter-ion
-        if self.add_anion:
+        if self.add_ion:
             neutral_molecule = dock_atoms(
                 self.molecule,
                 dock_atoms=self.ions[0],
-                crest_relax=True,
+                crest_sampling=True,
                 chg=self.chg_mult[0],
                 mult=self.chg_mult[1],
             )
             charged_molecule = dock_atoms(
                 self.molecule,
                 dock_atoms=self.ions[0],
-                crest_relax=True,
+                crest_sampling=True,
                 chg=self.chg_mult[2],
                 mult=self.chg_mult[3],
             )
@@ -66,7 +85,7 @@ class RedoxCal(BaseModel):
             charged_molecule = relax(
                 self.molecule, chg=self.chg_mult[2], mult=self.chg_mult[3]
             )
-        
+
         # * calculate the oxidation state energies (in eV)
         redox_potential = RedoxPotential(
             neutral_molecule=neutral_molecule,
@@ -76,23 +95,23 @@ class RedoxCal(BaseModel):
             calc_kwards=self.calc_kwards,
         ).cal_cycle()
         return redox_potential
-    
+
     def get_re(self):
         # * generate solvated molecules using anion and counter-ion
-        if self.add_anion:
-            neutral_molecule = dock_atoms(
+        if self.add_ion:
+            neutral_molecule = protonate(
                 self.molecule,
-                dock_atoms=self.ions[1],
-                crest_relax=True,
+                ion=self.ions[1],
                 chg=self.chg_mult[4],
                 mult=self.chg_mult[5],
+                threads=16,
             )
-            charged_molecule = dock_atoms(
+            charged_molecule = protonate(
                 self.molecule,
-                dock_atoms=self.ions[1],
-                crest_relax=True,
+                ion=self.ions[1],
                 chg=self.chg_mult[6],
                 mult=self.chg_mult[7],
+                threads=16,
             )
         else:
             neutral_molecule = relax(

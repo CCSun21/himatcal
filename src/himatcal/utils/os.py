@@ -131,7 +131,7 @@ def get_homo_lumo(log_path):
         dict: A dictionary containing HOMO and LUMO orbitals, energies, gaps, and the minimum HOMO-LUMO gap.
     """
 
-    data = cclib_result(log_path)
+    data = cclib_result(Path(log_path))
     HOMO = data.homos + 1
     LUMO = data.homos + 2
     homo_energies, lumo_energies, gaps = get_homos_lumos(data.moenergies, data.homos)
@@ -146,7 +146,7 @@ def get_homo_lumo(log_path):
     }
 
 
-def cclib_result(log_path):
+def cclib_result(log_path:Path):
     """Extracts and reads computational chemistry log files.
 
     This function checks for compressed log files in the specified directory, decompresses the first found file, and reads the contents using the cclib library. It returns the parsed data from the log file.
