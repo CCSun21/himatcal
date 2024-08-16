@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Optional
 
 from himatcal.recipes.gaussian.core import relax_job, static_job
 from himatcal.utils.os import cclib_result
@@ -38,11 +38,13 @@ class RedoxPotential:
         self.calc_kwards = calc_kwards
 
     # * 1. relax the molecule in low level of theory
-    def relax_llot(self, chg: int, mult: int, kwargs: dict):
+    def relax_llot(self, chg: int, mult: int, kwargs: dict | None = None):
         """
         low level of theory calculation for neutral and charged molecule, using for structure optimization and gibbs free energy correlation
         if using in solvent, please pass {"scrf": ["SMD", f"solvent={self.calc_kwards["solvent"}"]}  to kwargs
         """
+        if kwargs is None:
+            kwargs = {}
         calc_keywords = {
             "label": "relax_llot",
             "mem": "64GB",
@@ -136,7 +138,7 @@ class RedoxPotential:
             sp_cclib_results.scfenergies[0]
             + relax_cclib_results.freeenergy * 27.211
             - relax_cclib_results.scfenergies[0]
-        )  # ! fix this
+        )
         logging.info(
             f"{chg_status} molecule in {phase_status} phase Gibbs free energy: {Gibbs_energy} eV"
         )

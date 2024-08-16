@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from himatcal.atoms.core import PF6, dock_atoms
 from himatcal.recipes.crest.core import protonate, relax
@@ -94,6 +94,7 @@ class RedoxCal:
             calc_type="ox",
             calc_kwards=self.calc_kwards,
         ).cal_cycle()
+        logging.info(f"{self.label} oxidation potential: {redox_potential} eV")
         return redox_potential
 
     def get_re(self):
@@ -129,6 +130,7 @@ class RedoxCal:
             calc_type="re",
             calc_kwards=self.calc_kwards,
         ).cal_cycle()
+        logging.info(f"{self.label} reduction potential: {redox_potential} eV")
         return redox_potential
 
     def get_redox(self):
