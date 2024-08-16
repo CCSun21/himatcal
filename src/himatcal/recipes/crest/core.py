@@ -74,6 +74,7 @@ def iMTD_GC(
     mult: int = 1,
     gfn_level: Literal["gfn1", "gfn2", "gfnff", "gfn2//gfnff"] = "gfn2",
     alpb: str | None = None,
+    topo_change: bool = False,
     threads: int = 16,
 ):
     atoms_name = "input.xyz"
@@ -82,6 +83,8 @@ def iMTD_GC(
     protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
     if alpb:
         protonate_cmd += f" -alpb {alpb}"
+    if topo_change:
+        protonate_cmd += " --noreftopo"
     with Path.open(Path("crest_opt.sh"), "w") as f:
         f.write(f"#!/bin/bash\n{protonate_cmd}")
     log_file_path = Path("crest_opt.log")

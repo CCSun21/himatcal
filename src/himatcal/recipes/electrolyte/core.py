@@ -107,8 +107,19 @@ class RedoxPotential:
         phase_status: Literal["gas", "solvent"],
     ):
         """
-        calculate the Gibbs free energy from single point calculation and correlation from relax results
+        Calculates the Gibbs free energy and single point energy of a molecular system.
+
+        This function determines the energy of a molecule based on its charge and phase status, performing necessary calculations to obtain the Gibbs free energy and single point energy. It adjusts the molecule's properties according to the specified charge and phase, and logs the results.
+
+        Args:
+            chg_status: A string indicating the charge status of the molecule, either "neutral" or "charged".
+            phase_status: A string indicating the phase of the molecule, either "gas" or "solvent".
+
+        Returns:
+            tuple: A tuple containing the Gibbs free energy and single point energy in eV.
+
         """
+
         if chg_status == "neutral":
             self.molecule = self.neutral_molecule.copy()
             self.chg = self.chg_mult[0]

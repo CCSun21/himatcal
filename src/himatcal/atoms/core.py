@@ -166,6 +166,7 @@ def dock_atoms(
     crest_sampling: bool = True,
     chg: int = 0,
     mult: int = 1,
+    topo_change: bool = False,
 ):
     """
     Dock the ship🚢 atoms to the dock⚓ atoms (default is PF6).
@@ -191,7 +192,7 @@ def dock_atoms(
         for _ in range(3):
             logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
             with contextlib.suppress(Exception):
-                ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult)
+                ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult, topo_change=topo_change)
                 break
 
     return ship_atoms
