@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -188,7 +189,10 @@ def dock_atoms(
     dock_atoms.positions = dock_atoms.positions + vector + offset
     ship_atoms.extend(dock_atoms)
     if crest_sampling:
-        ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult)
+        for _ in range(3):
+            with contextlib.suppress(Exception):
+                ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult)
+                break
     return ship_atoms
 
 

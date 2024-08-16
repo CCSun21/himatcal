@@ -62,7 +62,7 @@ def relax(
         )
     try:
         return read("crestopt.xyz")
-    except:
+    except FileNotFoundError:
         logger.error(
             "The relaxation did not complete successfully, please check the log file."
         )
