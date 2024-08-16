@@ -32,16 +32,15 @@ class RedoxCal:
         molecule: Atoms | None = (None,),
         chg_mult: list[int] | None = None,
         add_ion: bool = (True,),
-        ions: list[Atoms | str]
-        | None = None,  # set [PF6, 'Na'] for sodium solvent calculation
-        label: str = ("redox",),
+        ions: list[Atoms | str] | None = None,
+        label: str = "redox",
         calc_kwards: dict | None = None,
         machine_kwards: dict | None = None,
     ):
         if chg_mult is None:
             chg_mult = [-1, 1, 0, 2, 1, 1, 0, 2]
         if ions is None:
-            ions = [PF6, "Li"]
+            ions = [PF6, "Li"]  # set [PF6, 'Na'] for sodium solvent calculation
         if calc_kwards is None:
             calc_kwards = {
                 "opt_xc": "b3lyp",
@@ -62,6 +61,19 @@ class RedoxCal:
         self.machine_kwards = machine_kwards
 
     def get_ox(self):
+        """
+        Calculates the oxidation potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the oxidation potential, either by docking with ions or relaxing the molecule, depending on the presence of ions. It then computes the redox potential based on these generated molecules.
+
+        Args:
+            None
+
+        Returns:
+            float: The calculated oxidation potential in eV.
+
+        """
+
         # * generate solvated molecules using anion and counter-ion
         if self.add_ion:
             neutral_molecule = dock_atoms(
@@ -151,6 +163,19 @@ class RedoxCal:
         return redox_potential
 
     def get_redox(self):
+        """
+        Calculates the oxidation and reduction potentials of a molecular system.
+
+        This function retrieves the oxidation and reduction potentials by calling the respective methods and returns them as a list. It provides a convenient way to access both potentials in a single call.
+
+        Args:
+            None
+
+        Returns:
+            list: A list containing the oxidation potential and reduction potential.
+
+        """
+
         oxidation_potential = self.get_ox()
         reduction_potential = self.get_re()
         return [oxidation_potential, reduction_potential]

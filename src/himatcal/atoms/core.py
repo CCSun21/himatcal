@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ase import Atoms
 from ase.io import write
 
-from himatcal.recipes.crest.core import relax, iMTD_GC
+from himatcal.recipes.crest.core import iMTD_GC, relax
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -166,7 +167,6 @@ def dock_atoms(
     chg: int = 0,
     mult: int = 1,
 ):
-    # TODO: this dock function is not general enough, it should be able to dock any two atoms
     """
     Dock the ship🚢 atoms to the dock⚓ atoms (default is PF6).
 
@@ -184,15 +184,16 @@ def dock_atoms(
     ship_atoms_center[0] = max(ship_atoms.positions.T[0])
     dock_atoms_center = dock_atoms.get_center_of_mass()
     dock_atoms_center[0] = min(dock_atoms.positions.T[0])
-    vector = ship_atoms_center - dock_atoms_center
-    offset = [offset, 0, 0]
-    dock_atoms.positions = dock_atoms.positions + vector + offset
+    vector = ship_atoms_center - dock_atoms_center + [offset, 0, 0]
+    dock_atoms.positions += vector
     ship_atoms.extend(dock_atoms)
     if crest_sampling:
         for _ in range(3):
+            logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
             with contextlib.suppress(Exception):
                 ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult)
                 break
+
     return ship_atoms
 
 

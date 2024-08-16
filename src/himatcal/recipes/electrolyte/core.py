@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 from himatcal.recipes.gaussian.core import relax_job, static_job
 from himatcal.utils.os import cclib_result
@@ -89,15 +89,19 @@ class RedoxPotential:
             "pop": "CM5",
             "ioplist": ["2/9=2000"],
         } | kwargs
-        logging.info(f"Calculating single point energy for {chg} charge molecule in high level of theory")
+        logging.info(
+            f"Calculating single point energy for {chg} charge molecule in high level of theory"
+        )
         quacc_results = static_job(
             self.molecule, charge=chg, spin_multiplicity=mult, **calc_keywords
         )
         cclib_results = cclib_result(Path(quacc_results["dir_name"]))
-        logging.info(f"Single point energy calculation for {chg} charge molecule in high level of theory done")
+        logging.info(
+            f"Single point energy calculation for {chg} charge molecule in high level of theory done"
+        )
         return (quacc_results, cclib_results)
 
-    def cal_Gibbs(
+    def cal_energy(
         self,
         chg_status: Literal["neutral", "charged"],
         phase_status: Literal["gas", "solvent"],
@@ -139,36 +143,44 @@ class RedoxPotential:
             + relax_cclib_results.freeenergy * 27.211
             - relax_cclib_results.scfenergies[0]
         )
+        SPE_energy = sp_cclib_results.scfenergies[0]
         logging.info(
-            f"{chg_status} molecule in {phase_status} phase Gibbs free energy: {Gibbs_energy} eV"
+            f"{chg_status} molecule in {phase_status} phase Gibbs free energy: {Gibbs_energy} eV, Single point energy: {SPE_energy} eV"
         )
-        return Gibbs_energy
+        return Gibbs_energy, SPE_energy
 
     def cal_cycle(self):
         """
         calculate the potential from neutral and charged molecule, return the potential, the unit is eV
         real_potential = potential - 1.44 eV
         """
-        neutral_gas_gibbs = self.cal_Gibbs(chg_status="neutral", phase_status="gas")
-        neutral_solvent_gibbs = self.cal_Gibbs(
+        neutral_gas_gibbs, neutral_gas_spe = self.cal_energy(
+            chg_status="neutral", phase_status="gas"
+        )
+        charged_gas_gibbs, charged_gas_spe = self.cal_energy(
+            chg_status="charged", phase_status="gas"
+        )
+        neutral_solvent_gibbs, neutral_solvent_spe = self.cal_energy(
             chg_status="neutral", phase_status="solvent"
         )
-        charged_gas_gibbs = self.cal_Gibbs(chg_status="charged", phase_status="gas")
-        charged_solvent_gibbs = self.cal_Gibbs(
+        charged_solvent_gibbs, charged_solvent_spe = self.cal_energy(
             chg_status="charged", phase_status="solvent"
         )
+
+        # * \delta G_{gas} = G_{charged}^{gas} - G_{neutral}^{gas}
+        delta_G_gas = charged_gas_gibbs - neutral_gas_gibbs
+
+        # * \delta G_{solvention}(neutral) = E_{neutral}^{solvent} - E_{neutral}^{gas}
+        # * \delta G_{solvention}(charged) = E_{charged}^{solvent} - E_{charged}^{gas}
+        delta_G_solvention_neutral = neutral_solvent_spe - neutral_gas_spe
+        delta_G_solvention_charged = charged_solvent_spe - charged_gas_spe
+
         if self.calc_type == "ox":
             potential = (
-                charged_gas_gibbs
-                - neutral_gas_gibbs
-                - charged_solvent_gibbs
-                + neutral_solvent_gibbs
+                delta_G_gas - delta_G_solvention_neutral + delta_G_solvention_charged
             )
         if self.calc_type == "re":
-            potential = (
-                neutral_gas_gibbs
-                - charged_gas_gibbs
-                - neutral_solvent_gibbs
-                + charged_solvent_gibbs
+            potential = -(
+                delta_G_gas - delta_G_solvention_neutral + delta_G_solvention_charged
             )
         return potential - 1.44
