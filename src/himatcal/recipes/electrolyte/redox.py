@@ -33,7 +33,7 @@ class RedoxCal:
         chg_mult: list[int] | None = None,
         add_ion: bool = (True,),
         ions: list[Atoms | str]
-        | None = None,  # set [PF6, 'na'] for sodium solvent calculation
+        | None = None,  # set [PF6, 'Na'] for sodium solvent calculation
         label: str = ("redox",),
         calc_kwards: dict | None = None,
         machine_kwards: dict | None = None,
@@ -41,7 +41,7 @@ class RedoxCal:
         if chg_mult is None:
             chg_mult = [-1, 1, 0, 2, 1, 1, 0, 2]
         if ions is None:
-            ions = [PF6, "li"]
+            ions = [PF6, "Li"]
         if calc_kwards is None:
             calc_kwards = {
                 "opt_xc": "b3lyp",
@@ -98,21 +98,38 @@ class RedoxCal:
         return redox_potential
 
     def get_re(self):
-        # * generate solvated molecules using anion and counter-ion
+        """
+        Calculates the reduction potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the reduction potential, either by protonation or relaxation, depending on the presence of ions. It utilizes a helper function to streamline the process of generating molecules and logs the resulting reduction potential.
+
+        Args:
+            add_ion: A boolean indicating whether to include an anion in the system.
+            molecule: An Atoms object representing the molecule for the calculation.
+            ions: A list containing Atoms or strings representing the ions involved in the calculation.
+            chg_mult: A list of integers specifying the charge multiplicities for the calculation.
+            calc_kwards: A dictionary containing keyword arguments for the calculation methods.
+
+        Returns:
+            float: The calculated reduction potential in eV.
+
+        """
+
+        def generate_molecule(molecule, ion, chg, mult, threads=16):
+            mol = protonate(molecule, ion=ion, chg=chg, mult=mult, threads=threads)
+            if mol is None:
+                logging.info("Protonation failed, trying docking")
+                mol = dock_atoms(
+                    molecule, dock_atoms=ion, crest_sampling=True, chg=chg, mult=mult
+                )
+            return mol
+
         if self.add_ion:
-            neutral_molecule = protonate(
-                self.molecule,
-                ion=self.ions[1],
-                chg=self.chg_mult[4],
-                mult=self.chg_mult[5],
-                threads=16,
+            neutral_molecule = generate_molecule(
+                self.molecule, self.ions[1], self.chg_mult[4], self.chg_mult[5]
             )
-            charged_molecule = protonate(
-                self.molecule,
-                ion=self.ions[1],
-                chg=self.chg_mult[6],
-                mult=self.chg_mult[7],
-                threads=16,
+            charged_molecule = generate_molecule(
+                self.molecule, self.ions[1], self.chg_mult[6], self.chg_mult[7]
             )
         else:
             neutral_molecule = relax(
