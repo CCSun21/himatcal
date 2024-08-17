@@ -200,6 +200,7 @@ def dock_atoms(
             with contextlib.suppress(Exception):
                 ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult, topo_change=True)
                 break
+        logging.info("Sampling failed, returns docked atoms without relaxation!")
 
     return ship_atoms
 
