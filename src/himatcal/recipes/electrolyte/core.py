@@ -24,9 +24,11 @@ class RedoxPotential:
         if calc_kwards is None:
             calc_kwards = {
                 "opt_xc": "b3lyp",
-                "opt_basis": "6-311+G(d,p)",
+                "opt_basis": "6-31G* em=GD3BJ",
+                "gas_xc": "m062x",
+                "gas_basis": "6-311G**",
                 "sol_xc": "m062x",
-                "sol_basis": "6-31G*",
+                "sol_basis": "6-311G**", # only for solvent gibbs free energy correction
                 "solvent": "Acetone",
             }
         if chg_mult is None:
@@ -41,7 +43,7 @@ class RedoxPotential:
     def relax_llot(self, chg: int, mult: int, kwargs: dict | None = None):
         # sourcery skip: class-extract-method
         """
-        low level of theory calculation for neutral and charged molecule, using for structure optimization and gibbs free energy correlation
+        low level of theory calculation for neutral and charged molecule, using for structure optimization and gibbs free energy correction
         if using in solvent, please pass {"scrf": ["SMD", f"solvent={self.calc_kwards["solvent"}"]}  to kwargs
         """
         if kwargs is None:
@@ -52,7 +54,7 @@ class RedoxPotential:
             "chk": "Gaussian.chk",
             "nprocshared": 64,
             "xc": "b3lyp",
-            "basis": "6-31G*",
+            "basis": "6-31G* em=GD3BJ",
             "opt": "",
             "scf": ["maxcycle=250", "xqc"],
             "integral": "ultrafine",
@@ -82,8 +84,8 @@ class RedoxPotential:
             "mem": "64GB",
             "chk": "Gaussian.chk",
             "nprocshared": 64,
-            "xc": "b3lyp",
-            "basis": "6-311+G(d,p)",
+            "xc": "m062x",
+            "basis": "6-311G**",
             "scf": ["maxcycle=250", "xqc"],
             "integral": "ultrafine",
             "nosymmetry": "",
@@ -137,18 +139,24 @@ class RedoxPotential:
             }
         elif phase_status == "gas":
             kwargs = {
-                "xc": self.calc_kwards["opt_xc"],
-                "basis": self.calc_kwards["opt_basis"],
+                "xc": self.calc_kwards["gas_xc"],
+                "basis": self.calc_kwards["gas_basis"],
             }
         # * 1. relax the molecule in low level of theory
+        opt_kwargs = {
+            "xc": self.calc_kwards["opt_xc"],
+            "basis": self.calc_kwards["opt_basis"],
+        }
         relax_results, relax_cclib_results = self.relax_llot(
-            chg=self.chg, mult=self.mult
+            chg=self.chg, mult=self.mult, kwargs=opt_kwargs
         )
         self.molecule = relax_results["atoms"]
-        # * 2.calculate the single point energy from low level of theory
+        # * 2.calculate the single point energy from low level of theory to get the Gibbs free energy
         sp_results, sp_cclib_results = self.sp_hlot(
             chg=self.chg, mult=self.mult, kwargs=kwargs
         )
+
+        # * 3.calculate the single point energy at solvation level to get the spe energy
 
         Gibbs_energy = (
             sp_cclib_results.scfenergies[0]

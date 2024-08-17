@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ast import Str
 import contextlib
 import logging
 from pathlib import Path
@@ -161,11 +162,11 @@ elements = [
 
 def dock_atoms(
     ship_atoms: Atoms,
-    dock_atoms: Atoms | Literal["PF6", "Li", "Na"] = "PF6",
-    offset: float = 1.5,
-    crest_sampling: bool = True,
+    dock_atoms: Atoms | str = "PF6",
     chg: int = 0,
     mult: int = 1,
+    offset: float = 1.5,
+    crest_sampling: bool = True,
     topo_change: bool = False,
 ):
     """

@@ -83,6 +83,7 @@ class RedoxCal:
 
         # * generate solvated molecules using anion and counter-ion
         if self.add_ion:
+            logging.info("Generate and relax molecules clusters using crest")
             neutral_molecule = dock_atoms(
                 self.molecule,
                 dock_atoms=self.ions[0],
@@ -98,6 +99,7 @@ class RedoxCal:
                 mult=self.chg_mult[3],
             )
         else:
+            logging.info("Relaxing molecules using crest")
             neutral_molecule = relax(
                 self.molecule, chg=self.chg_mult[0], mult=self.chg_mult[1]
             )
@@ -158,17 +160,18 @@ class RedoxCal:
 
             mol = (
                 protonate(molecule, ion=ion, chg=chg, mult=mult, threads=threads)
-                if protonate_ion_string
+                if protonate_ion_string and ion is str
                 else None
             )
             if mol is None:
-                logging.info("Protonation failed, trying docking")
+                logging.info("Protonation failed or skipped, trying docking")
                 mol = dock_atoms(
                     molecule, dock_atoms=ion, crest_sampling=True, chg=chg, mult=mult
                 )
             return mol
 
         if self.add_ion:
+            logging.info("Generate and relax molecules clusters using crest")
             neutral_molecule = generate_molecule(
                 self.molecule,
                 self.ions[1],
@@ -184,6 +187,7 @@ class RedoxCal:
                 protonate_ion_string=self.protonate_ion_string,
             )
         else:
+            logging.info("Relaxing molecules using crest")
             neutral_molecule = relax(
                 self.molecule, chg=self.chg_mult[4], mult=self.chg_mult[5]
             )
