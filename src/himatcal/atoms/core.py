@@ -192,6 +192,7 @@ def dock_atoms(
     if not crest_sampling:
         return docked_atoms
 
+    processed_atoms = None
     for _ in range(3):
         logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
         with contextlib.suppress(Exception):

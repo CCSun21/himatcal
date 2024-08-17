@@ -160,7 +160,7 @@ class RedoxCal:
 
             mol = (
                 protonate(molecule, ion=ion, chg=chg, mult=mult, threads=threads)
-                if protonate_ion_string is True and ion is str
+                if protonate_ion_string is True and isinstance(ion, str)
                 else None
             )
             if mol is None:
