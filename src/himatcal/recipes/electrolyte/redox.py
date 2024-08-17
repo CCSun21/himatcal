@@ -13,18 +13,23 @@ if TYPE_CHECKING:
 
 class RedoxCal:
     """
-    RedoxCal is a class for managing and calculating redox potentials in molecular systems.
+    A class to calculate the oxidation and reduction potentials of a molecular system.
 
-    This class defines the necessary attributes and parameters for performing redox calculations, including the molecular structure, charge multiplicities, and calculation settings. It provides a structured approach to facilitate the setup and execution of redox potential calculations.
+    This class provides methods to compute the oxidation and reduction potentials based on the molecular structure and specified ions. It allows for the inclusion of ions and various calculation parameters to tailor the analysis.
 
     Attributes:
-        label: A string representing the label for the redox calculation, defaulting to "redox".
-        molecule: An optional Atoms object representing the molecule for the calculation.
-        charge_mult: A list of integers specifying the charge multiplicities for the calculation, defaulting to [-1, 1, 0, 2, 1, 1, 0, 2].
-        add_anion: A boolean indicating whether to include an anion in the system, defaulting to True.
-        ions: A list containing Atoms or strings representing the ions involved in the calculation, defaulting to [PF6, 'li'].
-        calc_kwards: A dictionary containing keyword arguments for the calculation methods, including optimization and solvent settings.
+        molecule (Atoms | None): The molecular structure for the calculations.
+        chg_mult (list[int] | None): Charge multiplicities for the calculations.
+        add_ion (bool): Indicates whether to include an anion in the system.
+        ions (list[Atoms | str] | None): Ions involved in the calculations.
+        label (str): A label for the calculations.
+        calc_kwards (dict | None): Keyword arguments for calculation methods.
+        machine_kwards (dict | None): Machine-specific keyword arguments.
 
+    Methods:
+        get_ox(): Calculates the oxidation potential of the molecular system.
+        get_re(): Calculates the reduction potential of the molecular system.
+        get_redox(): Retrieves both oxidation and reduction potentials.
     """
 
     def __init__(
@@ -33,6 +38,7 @@ class RedoxCal:
         chg_mult: list[int] | None = None,
         add_ion: bool = (True,),
         ions: list[Atoms | str] | None = None,
+        protonate_ion_string: bool = True,
         label: str = "redox",
         calc_kwards: dict | None = None,
         machine_kwards: dict | None = None,
@@ -56,6 +62,7 @@ class RedoxCal:
         self.add_ion = add_ion
         self.ions = ions
         self.label = label
+        self.protonate_ion_string = protonate_ion_string
 
         self.calc_kwards = calc_kwards
         self.machine_kwards = machine_kwards
@@ -127,8 +134,33 @@ class RedoxCal:
 
         """
 
-        def generate_molecule(molecule, ion, chg, mult, threads=16):
-            mol = protonate(molecule, ion=ion, chg=chg, mult=mult, threads=threads)
+        def generate_molecule(
+            molecule, ion, chg, mult, protonate_ion_string, threads=16
+        ):
+            """
+            Generates a molecular structure by either protonating or docking the specified molecule.
+
+            This function attempts to protonate the given molecule using the specified ion and charge parameters. If protonation fails, it falls back to docking the molecule with the specified ion, logging the failure of the protonation attempt.
+
+            If the protonation will fail or results a mis-protonated molecule, please consider docking your ion into it by setting 'protonate_ion_string' to False in class RedoxCal. This will allow the docking attempt to work normally.
+
+            Args:
+                molecule: The molecular structure to be modified.
+                ion: The ion used for protonation or docking.
+                chg: The charge associated with the ion.
+                mult: The multiplicity of the ion.
+                protonate_ion_string: A boolean indicating whether to attempt protonation.
+                threads (int, optional): The number of threads to use for the operation. Defaults to 16.
+
+            Returns:
+                The modified molecular structure after protonation or docking, or None if both attempts fail.
+            """
+
+            mol = (
+                protonate(molecule, ion=ion, chg=chg, mult=mult, threads=threads)
+                if protonate_ion_string
+                else None
+            )
             if mol is None:
                 logging.info("Protonation failed, trying docking")
                 mol = dock_atoms(
@@ -138,10 +170,18 @@ class RedoxCal:
 
         if self.add_ion:
             neutral_molecule = generate_molecule(
-                self.molecule, self.ions[1], self.chg_mult[4], self.chg_mult[5]
+                self.molecule,
+                self.ions[1],
+                self.chg_mult[4],
+                self.chg_mult[5],
+                protonate_ion_string=self.protonate_ion_string,
             )
             charged_molecule = generate_molecule(
-                self.molecule, self.ions[1], self.chg_mult[6], self.chg_mult[7]
+                self.molecule,
+                self.ions[1],
+                self.chg_mult[6],
+                self.chg_mult[7],
+                protonate_ion_string=self.protonate_ion_string,
             )
         else:
             neutral_molecule = relax(

@@ -1,4 +1,3 @@
-### python provided modules ###
 from __future__ import annotations
 
 import distutils.spawn

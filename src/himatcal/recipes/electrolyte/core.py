@@ -39,6 +39,7 @@ class RedoxPotential:
 
     # * 1. relax the molecule in low level of theory
     def relax_llot(self, chg: int, mult: int, kwargs: dict | None = None):
+        # sourcery skip: class-extract-method
         """
         low level of theory calculation for neutral and charged molecule, using for structure optimization and gibbs free energy correlation
         if using in solvent, please pass {"scrf": ["SMD", f"solvent={self.calc_kwards["solvent"}"]}  to kwargs
