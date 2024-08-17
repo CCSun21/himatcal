@@ -204,7 +204,7 @@ def dock_atoms(
             with contextlib.suppress(Exception):
                 processed_atoms = iMTD_GC(docked_atoms, chg=chg, mult=mult, topo_change=True)
                 break
-        logging.info("Sampling failed, returns docked atoms without relaxation!")
+        logging.info("Crest iMTD-GC Sampling failed!")
     return processed_atoms
 
 

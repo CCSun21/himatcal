@@ -67,31 +67,18 @@ class RedoxCal:
         self.calc_kwards = calc_kwards
         self.machine_kwards = machine_kwards
 
-    def get_ox(self):
-        """
-        Calculates the oxidation potential of a molecular system.
-
-        This function generates the neutral and charged molecules required for calculating the oxidation potential, either by docking with ions or relaxing the molecule, depending on the presence of ions. It then computes the redox potential based on these generated molecules.
-
-        Args:
-            None
-
-        Returns:
-            float: The calculated oxidation potential in eV.
-
-        """
-
+    def prepare_ox(self):
         # * generate solvated molecules using anion and counter-ion
         if self.add_ion:
             logging.info("Generate and relax molecules clusters using crest")
-            neutral_molecule = dock_atoms(
+            self.neutral_molecule = dock_atoms(
                 self.molecule,
                 dock_atoms=self.ions[0],
                 crest_sampling=True,
                 chg=self.chg_mult[0],
                 mult=self.chg_mult[1],
             )
-            charged_molecule = dock_atoms(
+            self.charged_molecule = dock_atoms(
                 self.molecule,
                 dock_atoms=self.ions[0],
                 crest_sampling=True,
@@ -100,42 +87,14 @@ class RedoxCal:
             )
         else:
             logging.info("Relaxing molecules using crest")
-            neutral_molecule = relax(
+            self.neutral_molecule = relax(
                 self.molecule, chg=self.chg_mult[0], mult=self.chg_mult[1]
             )
-            charged_molecule = relax(
+            self.charged_molecule = relax(
                 self.molecule, chg=self.chg_mult[2], mult=self.chg_mult[3]
             )
 
-        # * calculate the oxidation state energies (in eV)
-        redox_potential = RedoxPotential(
-            neutral_molecule=neutral_molecule,
-            charged_molecule=charged_molecule,
-            chg_mult=self.chg_mult[:4],
-            calc_type="ox",
-            calc_kwards=self.calc_kwards,
-        ).cal_cycle()
-        logging.info(f"{self.label} oxidation potential: {redox_potential} eV")
-        return redox_potential
-
-    def get_re(self):
-        """
-        Calculates the reduction potential of a molecular system.
-
-        This function generates the neutral and charged molecules required for calculating the reduction potential, either by protonation or relaxation, depending on the presence of ions. It utilizes a helper function to streamline the process of generating molecules and logs the resulting reduction potential.
-
-        Args:
-            add_ion: A boolean indicating whether to include an anion in the system.
-            molecule: An Atoms object representing the molecule for the calculation.
-            ions: A list containing Atoms or strings representing the ions involved in the calculation.
-            chg_mult: A list of integers specifying the charge multiplicities for the calculation.
-            calc_kwards: A dictionary containing keyword arguments for the calculation methods.
-
-        Returns:
-            float: The calculated reduction potential in eV.
-
-        """
-
+    def prepare_re(self):
         def generate_molecule(
             molecule, ion, chg, mult, protonate_ion_string, threads=16
         ):
@@ -172,14 +131,14 @@ class RedoxCal:
 
         if self.add_ion:
             logging.info("Generate and relax molecules clusters using crest")
-            neutral_molecule = generate_molecule(
+            self.neutral_molecule = generate_molecule(
                 self.molecule,
                 self.ions[1],
                 self.chg_mult[4],
                 self.chg_mult[5],
                 protonate_ion_string=self.protonate_ion_string,
             )
-            charged_molecule = generate_molecule(
+            self.charged_molecule = generate_molecule(
                 self.molecule,
                 self.ions[1],
                 self.chg_mult[6],
@@ -188,23 +147,97 @@ class RedoxCal:
             )
         else:
             logging.info("Relaxing molecules using crest")
-            neutral_molecule = relax(
+            self.neutral_molecule = relax(
                 self.molecule, chg=self.chg_mult[4], mult=self.chg_mult[5]
             )
-            charged_molecule = relax(
+            self.charged_molecule = relax(
                 self.molecule, chg=self.chg_mult[6], mult=self.chg_mult[7]
             )
 
+    def cal_ox(self):
+        """
+        Calculates the oxidation potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the oxidation potential, either by docking with ions or relaxing the molecule, depending on the presence of ions. It then computes the redox potential based on these generated molecules.
+
+        Args:
+            None
+
+        Returns:
+            float: The calculated oxidation potential in eV.
+
+        """
+
         # * calculate the oxidation state energies (in eV)
         redox_potential = RedoxPotential(
-            neutral_molecule=neutral_molecule,
-            charged_molecule=charged_molecule,
+            neutral_molecule=self.neutral_molecule,
+            charged_molecule=self.charged_molecule,
+            chg_mult=self.chg_mult[:4],
+            calc_type="ox",
+            calc_kwards=self.calc_kwards,
+        ).cal_cycle()
+        logging.info(f"{self.label} oxidation potential: {redox_potential} eV")
+        return redox_potential
+
+    def cal_re(self):
+        """
+        Calculates the reduction potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the reduction potential, either by protonation or relaxation, depending on the presence of ions. It utilizes a helper function to streamline the process of generating molecules and logs the resulting reduction potential.
+
+        Args:
+            add_ion: A boolean indicating whether to include an anion in the system.
+            molecule: An Atoms object representing the molecule for the calculation.
+            ions: A list containing Atoms or strings representing the ions involved in the calculation.
+            chg_mult: A list of integers specifying the charge multiplicities for the calculation.
+            calc_kwards: A dictionary containing keyword arguments for the calculation methods.
+
+        Returns:
+            float: The calculated reduction potential in eV.
+
+        """
+        # * calculate the oxidation state energies (in eV)
+        redox_potential = RedoxPotential(
+            neutral_molecule=self.neutral_molecule,
+            charged_molecule=self.charged_molecule,
             chg_mult=self.chg_mult[4:8],
             calc_type="re",
             calc_kwards=self.calc_kwards,
         ).cal_cycle()
         logging.info(f"{self.label} reduction potential: {redox_potential} eV")
         return redox_potential
+
+    def get_ox(self):
+        """
+        Calculates the oxidation potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the oxidation potential, either by docking with ions or relaxing the molecule, depending on the presence of ions. It then computes the redox potential based on these generated molecules.
+
+        Args:
+            None
+
+        Returns:
+            float: The calculated oxidation potential in eV.
+
+        """
+        self.prepare_ox()
+        return self.cal_ox()
+
+    def get_re(self):
+        """
+        Calculates the reduction potential of a molecular system.
+
+        This function generates the neutral and charged molecules required for calculating the reduction potential, either by protonation or relaxation, depending on the presence of ions. It utilizes a helper function to streamline the process of generating molecules and logs the resulting reduction potential.
+
+        Args:
+            None
+
+        Returns:
+            float: The calculated reduction potential in eV.
+
+        """
+        self.prepare_re()
+        return self.cal_re()
 
     def get_redox(self):
         """

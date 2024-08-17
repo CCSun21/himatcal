@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import logging
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ase.io import read, write
+from monty.os import cd
 
 from himatcal import SETTINGS
 
@@ -44,29 +46,32 @@ def relax(
     Raises:
         FileNotFoundError: If the output file "crestopt.xyz" is not found after optimization.
     """
-    atoms_name = "input.xyz"
-    write(atoms_name, atoms)
-    uhf = mult - 1
-    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --opt --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
-    if alpb:
-        protonate_cmd += f" -alpb {alpb}"
-    with Path.open(Path("crest_opt.sh"), "w") as f:
-        f.write(f"#!/bin/bash\n{protonate_cmd}")
-    log_file_path = Path("crest_opt.log")
-    with log_file_path.open("w") as log_file:
-        subprocess.run(
-            ["bash", "crest_opt.sh"],
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-    try:
-        return read("crestopt.xyz")
-    except FileNotFoundError:
-        logger.error(
-            "The relaxation did not complete successfully, please check the log file."
-        )
-        return None
+    scratch_folder = f"crest_opt_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    Path.mkdir(scratch_folder)
+    with cd(scratch_folder):
+        atoms_name = "input.xyz"
+        write(atoms_name, atoms)
+        uhf = mult - 1
+        protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --opt --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
+        if alpb:
+            protonate_cmd += f" -alpb {alpb}"
+        with Path.open(Path("crest_opt.sh"), "w") as f:
+            f.write(f"#!/bin/bash\n{protonate_cmd}")
+        log_file_path = Path("crest_opt.log")
+        with log_file_path.open("w") as log_file:
+            subprocess.run(
+                ["bash", "crest_opt.sh"],
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                check=True,
+            )
+        try:
+            return read("crestopt.xyz")
+        except FileNotFoundError:
+            logger.error(
+                "The relaxation did not complete successfully, please check the log file."
+            )
+            return None
 
 def iMTD_GC(
     atoms: Atoms,
@@ -77,31 +82,34 @@ def iMTD_GC(
     topo_change: bool = False,
     threads: int = 16,
 ):
-    atoms_name = "input.xyz"
-    write(atoms_name, atoms)
-    uhf = mult - 1
-    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
-    if alpb:
-        protonate_cmd += f" -alpb {alpb}"
-    if topo_change:
-        protonate_cmd += " --noreftopo"
-    with Path.open(Path("crest_opt.sh"), "w") as f:
-        f.write(f"#!/bin/bash\n{protonate_cmd}")
-    log_file_path = Path("crest_opt.log")
-    with log_file_path.open("w") as log_file:
-        subprocess.run(
-            ["bash", "crest_opt.sh"],
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-    try:
-        return read("crest_best.xyz")
-    except FileNotFoundError:
-        logger.error(
-            "The computation did not finish successfully, please check the log file."
-        )
-        return None
+    scratch_folder = f"crest_iMTD_GC_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    Path.mkdir(scratch_folder)
+    with cd(scratch_folder):
+        atoms_name = "input.xyz"
+        write(atoms_name, atoms)
+        uhf = mult - 1
+        protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
+        if alpb:
+            protonate_cmd += f" -alpb {alpb}"
+        if topo_change:
+            protonate_cmd += " --noreftopo"
+        with Path.open(Path("crest_opt.sh"), "w") as f:
+            f.write(f"#!/bin/bash\n{protonate_cmd}")
+        log_file_path = Path("crest_opt.log")
+        with log_file_path.open("w") as log_file:
+            subprocess.run(
+                ["bash", "crest_opt.sh"],
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                check=True,
+            )
+        try:
+            return read("crest_best.xyz")
+        except FileNotFoundError:
+            logger.error(
+                "The computation did not finish successfully, please check the log file."
+            )
+            return None
 
 def protonate(
     atoms: Atoms,
@@ -115,26 +123,29 @@ def protonate(
     """
     Protonate a structure using CREST, default is to protonate with Li
     """
-    atoms_name = "input.xyz"
-    write(atoms_name, atoms)
-    uhf = mult - 1
-    protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --protonate --swel {ion} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
-    if alpb:
-        protonate_cmd += f" -alpb {alpb}"
-    with Path.open(Path("crest_opt.sh"), "w") as f:
-        f.write(f"#!/bin/bash\n{protonate_cmd}")
-    log_file_path = Path("crest_opt.log")
-    with log_file_path.open("w") as log_file:
-        subprocess.run(
-            ["bash", "crest_opt.sh"],
-            stdout=log_file,
-            stderr=subprocess.STDOUT,
-            check=True,
-        )
-    try:
-        return read("protonated.xyz", index=0)
-    except FileNotFoundError:
-        logger.error(
-            "The protonation did not complete successfully, please check the log file."
-        )
-        return None
+    scratch_folder = f"crest_protonate_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    Path.mkdir(scratch_folder)
+    with cd(scratch_folder):
+        atoms_name = "input.xyz"
+        write(atoms_name, atoms)
+        uhf = mult - 1
+        protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --protonate --swel {ion} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
+        if alpb:
+            protonate_cmd += f" -alpb {alpb}"
+        with Path.open(Path("crest_opt.sh"), "w") as f:
+            f.write(f"#!/bin/bash\n{protonate_cmd}")
+        log_file_path = Path("crest_opt.log")
+        with log_file_path.open("w") as log_file:
+            subprocess.run(
+                ["bash", "crest_opt.sh"],
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                check=True,
+            )
+        try:
+            return read("protonated.xyz", index=0)
+        except FileNotFoundError:
+            logger.error(
+                "The protonation did not complete successfully, please check the log file."
+            )
+            return None
