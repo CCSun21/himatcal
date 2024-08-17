@@ -181,28 +181,30 @@ def dock_atoms(
     if isinstance(dock_atoms, str):
         dock_atoms = dock_atoms_dict.get(dock_atoms, dock_atoms)
 
-    ship_atoms = ship_atoms.copy()
-    ship_atoms_center = ship_atoms.get_center_of_mass()
-    ship_atoms_center[0] = max(ship_atoms.positions.T[0])
+    docked_atoms = ship_atoms.copy()
+    ship_atoms_center = docked_atoms.get_center_of_mass()
+    ship_atoms_center[0] = max(docked_atoms.positions.T[0])
     dock_atoms_center = dock_atoms.get_center_of_mass()
     dock_atoms_center[0] = min(dock_atoms.positions.T[0])
     vector = ship_atoms_center - dock_atoms_center + [offset, 0, 0]
     dock_atoms.positions += vector
-    ship_atoms.extend(dock_atoms)
-    if crest_sampling:
-        for _ in range(3):
-            logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
-            with contextlib.suppress(Exception):
-                ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult, topo_change=topo_change)
-                break
+    docked_atoms.extend(dock_atoms)
+    if not crest_sampling:
+        return docked_atoms
+
+    for _ in range(3):
+        logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
+        with contextlib.suppress(Exception):
+            processed_atoms = iMTD_GC(docked_atoms, chg=chg, mult=mult, topo_change=topo_change)
+            break
+    if processed_atoms is None:
         logging.info("Sampling failed, trying the docked atoms with topology change")
         for _ in range(3):
             with contextlib.suppress(Exception):
-                ship_atoms = iMTD_GC(ship_atoms, chg=chg, mult=mult, topo_change=True)
+                processed_atoms = iMTD_GC(docked_atoms, chg=chg, mult=mult, topo_change=True)
                 break
         logging.info("Sampling failed, returns docked atoms without relaxation!")
-
-    return ship_atoms
+    return processed_atoms
 
 
 def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
