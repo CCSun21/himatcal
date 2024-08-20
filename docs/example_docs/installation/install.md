@@ -24,5 +24,7 @@ To make sure you installed your package successfully, open a Python console and 
 micromamba env create -n himatcal python==3.10
 micromamba activate himatcal
 
-pip install himatcal
+pip install uv
+uv pip install himatcal
+uv pip install git+https://gitlab.com/ase/ase.git
 ```

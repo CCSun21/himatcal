@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from ast import Str
 import contextlib
 import logging
 from pathlib import Path
@@ -161,8 +160,8 @@ elements = [
 
 
 def dock_atoms(
-    ship_atoms: Atoms,
-    dock_atoms: Atoms | str = "PF6",
+    ship: Atoms,
+    dock: Atoms | str = "PF6",
     chg: int = 0,
     mult: int = 1,
     offset: float = 1.5,
@@ -178,17 +177,17 @@ def dock_atoms(
     """
     dock_atoms_dict = {"PF6": PF6.copy(), "Li": Li.copy(), "Na": Na.copy()}
 
-    if isinstance(dock_atoms, str):
-        dock_atoms = dock_atoms_dict.get(dock_atoms, dock_atoms)
+    if isinstance(dock, str):
+        dock = dock_atoms_dict.get(dock, dock)
 
-    docked_atoms = ship_atoms.copy()
+    docked_atoms = ship.copy()
     ship_atoms_center = docked_atoms.get_center_of_mass()
     ship_atoms_center[0] = max(docked_atoms.positions.T[0])
-    dock_atoms_center = dock_atoms.get_center_of_mass()
-    dock_atoms_center[0] = min(dock_atoms.positions.T[0])
+    dock_atoms_center = dock.get_center_of_mass()
+    dock_atoms_center[0] = min(dock.positions.T[0])
     vector = ship_atoms_center - dock_atoms_center + [offset, 0, 0]
-    dock_atoms.positions += vector
-    docked_atoms.extend(dock_atoms)
+    dock.positions += vector
+    docked_atoms.extend(dock)
     if not crest_sampling:
         return docked_atoms
 
@@ -214,6 +213,7 @@ def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
 
     Args:
 
+        create_tmp_folder:
         atoms (ase.Atoms): The atoms object.
         filename (str): The filename of the temporary file.
 

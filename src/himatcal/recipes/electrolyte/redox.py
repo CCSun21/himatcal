@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel, Field, field_validator
+
 from himatcal.atoms.core import PF6, dock_atoms
 from himatcal.recipes.crest.core import protonate, relax
 from himatcal.recipes.electrolyte.core import RedoxPotential
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from ase import Atoms
 
 
-class RedoxCal:
+class RedoxCal(BaseModel):
     """
     A class to calculate the oxidation and reduction potentials of a molecular system.
 
@@ -32,43 +34,59 @@ class RedoxCal:
         get_redox(): Retrieves both oxidation and reduction potentials.
     """
 
-    def __init__(
-        self,
-        molecule: Atoms | None = (None,),
-        chg_mult: list[int] | None = None,
-        add_ion: bool = (True,),
-        ions: list[Atoms | str] | None = None,
-        protonate_ion_string: bool = True,
-        label: str = "redox",
-        calc_kwards: dict | None = None,
-        machine_kwards: dict | None = None,
-    ):
-        if chg_mult is None:
-            chg_mult = [-1, 1, 0, 2, 1, 1, 0, 2]
-        if ions is None:
-            ions = [PF6, "Li"]  # set [PF6, 'Na'] for sodium solvent calculation
-        if calc_kwards is None:
-            calc_kwards = {
-                "opt_xc": "b3lyp",
-                "opt_basis": "6-311+G(d,p)",
-                "sol_xc": "m062x",
-                "sol_basis": "6-31G*",
-                "solvent": "Acetone",
-            }
-        if machine_kwards is None:
-            machine_kwards = {"xtb_proc": 16}
-        self.molecule = molecule
-        self.chg_mult = chg_mult
-        self.add_ion = add_ion
-        self.ions = ions
-        self.label = label
-        self.protonate_ion_string = protonate_ion_string
+    molecule: Atoms | None = Field(
+        None, description="The molecular structure for the calculations."
+    )
+    chg_mult: list[int] = Field(
+        default_factory=lambda: [-1, 1, 0, 2, 1, 1, 0, 2],
+        description="Charge multiplicities for the calculations.",
+    )
+    add_ion: bool = Field(
+        True, description="Indicates whether to include an ion in the system."
+    )
+    ions: list[Atoms | str] = Field(
+        default_factory=lambda: [PF6, "Li"],
+        description="Ions involved in the calculations.",
+    )
+    label: str = Field("redox", description="A label for the calculations.")
+    calc_kwards: dict = Field(
+        default_factory=lambda: {
+            "opt_xc": "b3lyp",
+            "opt_basis": "6-311+G(d,p)",
+            "sol_xc": "m062x",
+            "sol_basis": "6-31G*",
+            "solvent": "Acetone",
+        },
+        description="Keyword arguments for calculation methods.",
+    )
+    machine_kwards: dict = Field(
+        default_factory=lambda: {"xtb_proc": 16},
+        description="keyword arguments for Machine-specific.",
+    )
 
-        self.calc_kwards = calc_kwards
-        self.machine_kwards = machine_kwards
+    class Config:
+        arbitrary_types_allowed = True
+
+    @field_validator("chg_mult", pre=True, always=True)
+    def set_chg_mult(cls, v):
+        return v or [-1, 1, 0, 2, 1, 1, 0, 2]
+
+    @field_validator("ions", pre=True, always=True)
+    def set_ions(cls, v):
+        return v or [PF6, "Li"]
+
+    @field_validator("calc_kwards", pre=True, always=True)
+    def set_calc_kwards(cls, v):
+        return v or {
+            "opt_xc": "b3lyp",
+            "opt_basis": "6-311+G(d,p)",
+            "sol_xc": "m062x",
+            "sol_basis": "6-31G*",
+            "solvent": "Acetone",
+        }
 
     def prepare_ox(self):
-        # * generate solvated molecules using anion and counter-ion
+        # * generate solvated molecules using ion and counter-ion
         if self.add_ion:
             logging.info("Generate and relax molecules clusters using crest")
             self.neutral_molecule = dock_atoms(
