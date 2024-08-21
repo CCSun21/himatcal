@@ -69,23 +69,6 @@ def xyz_to_mol(xyz_file:Path, write_mol=True):
         return Path.open(f"{xyz_file}.mol").read()
     return None
 
-# * Gasteger charge visualization
-def plot_gasteiger_charges(mol):
-    """
-    Plot Gasteiger charges on a molecule.
-    """
-    from rdkit.Chem import AllChem
-    from rdkit.Chem.Draw import SimilarityMaps
-
-    AllChem.ComputeGasteigerCharges(mol)
-    contribs = [
-        float(mol.GetAtomWithIdx(i).GetProp("_GasteigerCharge"))
-        for i in range(mol.GetNumAtoms())
-    ]
-    SimilarityMaps.GetSimilarityMapFromWeights(
-        mol, contribs, colorMap="jet", contourLines=10
-    )
-
 
 def init_style():
     """

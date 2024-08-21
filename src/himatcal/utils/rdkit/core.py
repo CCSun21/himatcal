@@ -214,3 +214,21 @@ end structure
     atoms.cell = cell
     atoms.pbc = True
     return atoms
+
+
+# * Gasteger charge visualization
+def plot_gasteiger_charges(mol):
+    """
+    Plot Gasteiger charges on a molecule.
+    """
+    from rdkit.Chem import AllChem
+    from rdkit.Chem.Draw import SimilarityMaps
+
+    AllChem.ComputeGasteigerCharges(mol)
+    contribs = [
+        float(mol.GetAtomWithIdx(i).GetProp("_GasteigerCharge"))
+        for i in range(mol.GetNumAtoms())
+    ]
+    SimilarityMaps.GetSimilarityMapFromWeights(
+        mol, contribs, colorMap="jet", contourLines=10
+    )
