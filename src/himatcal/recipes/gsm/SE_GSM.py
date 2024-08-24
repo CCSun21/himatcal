@@ -39,7 +39,7 @@ class ASE_SE_GSM:
         self.atom = atom
         self.driving_coords = driving_coords  # List: driving_coords = [["BREAK", 2, 3]]
         if calculator is None:
-            from xtb.ase.calculator import XTB
+            from xtb_ase import XTB
 
             calculator = XTB()
         self.calculator = calculator
@@ -144,13 +144,13 @@ class ASE_SE_GSM:
     def run_gsm(self):
         self.gsm = SE_GSM.from_options(
             reactant=self.reactant,
-            nnodes=20,
+            nnodes=30,
             optimizer=self.optimizer,
             xyz_writer=manage_xyz.write_std_multixyz,
             driving_coords=self.driving_coords,
-            DQMAG_MAX=0.5,  # default value is 0.8
-            ADD_NODE_TOL=0.01,  # default value is 0.1
-            CONV_TOL=0.0005,
+            DQMAG_MAX=0.8,  # * default value is 0.8
+            ADD_NODE_TOL=0.1,  # * default value is 0.1, for GSM
+            CONV_TOL=0.0005,  # * prep grad
         )
         self.gsm.set_V0()
         self.gsm.nodes[0].gradrms = 0.0

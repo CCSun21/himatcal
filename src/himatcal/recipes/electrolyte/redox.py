@@ -91,14 +91,14 @@ class RedoxCal(BaseModel):
             logging.info("Generate and relax molecules clusters using crest")
             self.neutral_molecule = dock_atoms(
                 self.molecule,
-                dock_atoms=self.ions[0],
+                dock=self.ions[0],
                 crest_sampling=True,
                 chg=self.chg_mult[0],
                 mult=self.chg_mult[1],
             )
             self.charged_molecule = dock_atoms(
                 self.molecule,
-                dock_atoms=self.ions[0],
+                dock=self.ions[0],
                 crest_sampling=True,
                 chg=self.chg_mult[2],
                 mult=self.chg_mult[3],
@@ -143,7 +143,7 @@ class RedoxCal(BaseModel):
             if mol is None:
                 logging.info("Protonation failed or skipped, trying docking")
                 mol = dock_atoms(
-                    molecule, dock_atoms=ion, crest_sampling=True, chg=chg, mult=mult
+                    molecule, dock=ion, crest_sampling=True, chg=chg, mult=mult
                 )
             return mol
 
