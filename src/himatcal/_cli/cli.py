@@ -1,8 +1,15 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import Annotated
+from pathlib import Path
+from typing import Annotated, Optional
+from datetime import datetime, timezone
+from monty.os import cd
 
 import typer
 from rich import print
-from typing_extensions import Annotated
+from ase.io import read, write
+
 
 app = typer.Typer(
     name="himatcal",
@@ -23,7 +30,7 @@ def machine_name():
 
 
 @app.command("hello", help="Command to say hello :red_heart-emoji:")
-def hello(name: Annotated[Optional[str], typer.Argument(help="test command")] = None):
+def hello(name: Annotated[str | None, typer.Argument(help="test command")] = None):
     """
     test command
     """
@@ -74,6 +81,7 @@ def gs_jobs(
         sub_gs(input_file=inputfile, label="Gaussian", machine="sghpc1")
     elif command == "relax":
         from ase.io import read
+
         from himatcal.recipes.gaussian.core import relax_job
 
         atoms = read(inputfile)
@@ -198,7 +206,6 @@ def cancel_job(job_id: Annotated[str, typer.Argument(help="Job id to cancel")]):
 
 
 @app.command("test_exec")
-
 @app.command("status", help="Get the status of a covalent job", no_args_is_help=True)
 def job_status(job_id: Annotated[str, typer.Argument(help="Job id to get status")]):
     """
@@ -241,8 +248,7 @@ def extrcat_result(
     """
     from himatcal.utils.ct import extract_result
 
-    results = extract_result(job_id)
-    return results
+    return extract_result(job_id)
 
 
 @app.command(
@@ -260,5 +266,72 @@ def cas(
     get_molecular_structure(molecular_cas=cas, write_mol=write)
 
 
+@app.command("GSM", no_args_is_help=True)
+def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")], 
+        dc: Annotated[str,typer.Argument(help='driving coordinates with format ["BREAK"/"ADD", atom1, atom2] or ["ANGLE", atom1, atom2, atom3], or ["TORSION", atom1, atom2, atom3, atom4], or ["OOP", atom1, atom2, atom3, atom4]')], 
+        calc: Annotated[Optional[str], typer.Argument(help="The program you use for calc (xtb, gaussian and orca is supported)")]= "xtb",
+        chg: int = 0,
+        mult: int = 1,
+        ):
+    CWD = Path.cwd()
+    cache_path = CWD / f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    Path.mkdir(cache_path, exist_ok=True)
+    atoms = [read(Path(file))]
+    if calc=="xtb":
+        from xtb_ase import XTB
+        from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
+
+        gsm = ASE_SE_GSM(
+            atom=atoms,
+            driving_coords=eval(dc),
+            calculator=XTB(method="gfn2-xtb", charge=chg, uhf=mult-1, gbsa={"solvent": "acetone"}),
+        )
+    elif calc =="gaussian":
+        from ase.calculators.gaussian import Gaussian
+
+        calc = Gaussian(
+            charge=-1,
+            mult=1,
+            label="IMI",
+            method="B3LYP",
+            basis="6-31G(d)",
+            scf="xqc",
+            force="",  # * remember to return force
+            nosymm="",
+            mem="64GB",
+            nprocshared=16,
+        )
+        gsm = ASE_SE_GSM(
+            atom=atoms,
+            driving_coords=eval(dc),
+            calculator=calc,
+        )
+    elif calc == "orca":
+        from ase.calculators.orca import ORCA
+        from ase.calculators.orca import OrcaProfile
+
+        profile = OrcaProfile(command="/home/suncc/orca_6_0_0/orca")
+
+        calc = ORCA(
+            profile=profile,
+            charge=-1,
+            mult=1,
+            orcasimpleinput="B3LYP g-d3 def2-TZVP EnGrad", # using EnGrad for force calculation
+            orcablocks="%pal nprocs 16 end \n%maxcore 1000",
+        )
+
+        gsm = ASE_SE_GSM(
+            atom=atoms,
+            driving_coords=eval(dc),
+            calculator=calc,
+        )
+
+
+    with cd(cache_path):
+        gsm.run()
+
+
 if __name__ == "__main__":
     app()
+
+

@@ -225,3 +225,35 @@ def plot_gasteiger_charges(mol):
     SimilarityMaps.GetSimilarityMapFromWeights(
         mol, contribs, colorMap="jet", contourLines=10
     )
+
+def smiles_to_rdkit(smi, gen_3d=True, nconf=100):
+    """
+    Convert smiles to RDKit molecule.
+    Tries to generate the lowest-energy conformer.
+    """
+    mol = Chem.MolFromSmiles(smi)
+    mol = Chem.AddHs(mol)
+
+    if gen_3d:
+        cids = AllChem.EmbedMultipleConfs(mol, nconf, AllChem.ETKDG())
+
+        AllChem.MMFFSanitizeMolecule(mol)
+        mmff_props = AllChem.MMFFGetMoleculeProperties(mol)
+
+        energies = []
+        for cid in cids:
+            ff = AllChem.MMFFGetMoleculeForceField(mol, mmff_props, confId=cid)
+            ff.Minimize()
+            energy = ff.CalcEnergy()
+            energies.append(energy)
+
+        energies = np.asarray(energies)
+        min_energy_idx = np.argsort(energies)[0]
+
+        new_mol = Chem.Mol(mol)
+        new_mol.RemoveAllConformers()
+        min_conf = mol.GetConformer(cids[min_energy_idx])
+        new_mol.AddConformer(min_conf, assignId=True)
+        mol = new_mol
+
+    return mol

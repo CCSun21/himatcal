@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
-
-from ase import Atoms
+from typing import TYPE_CHECKING
 
 from himatcal.utils.mcd import chem, mcd
+
+if TYPE_CHECKING:
+    from ase import Atoms
 
 
 class MCD_runner:
@@ -17,7 +18,7 @@ class MCD_runner:
         driving_coords: list | None = None,  # atoms' index, target bondlength, step, [[1, 8, 2.1, 5]]
         qcsoft: str = "gaussian",
         command: str = "g16",
-        calc_kwargs: str = "#N B3LYP/6-311+g(d) em=GD3BJ scf(xqc) scrf(iefpcm, solvent=acetone)",
+        calc_kwargs: str = "#N B3LYP/6-311+g* em=GD3BJ scf(xqc) scrf(iefpcm, solvent=acetone)",
         num_relaxation: int = 5,
         step_size: float = 0.05,
         working_directory="",

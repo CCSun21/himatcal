@@ -54,6 +54,9 @@ class ASE_SE_GSM:
 
     # * 1. Build the LOT
     def build_lot(self):
+        """
+        build ase lot from calculator
+        """
         nifty.printcool(" Building the LOT")
         self.lot = ASELoT.from_options(self.calculator, geom=self.geom)
 
@@ -62,8 +65,8 @@ class ASE_SE_GSM:
         nifty.printcool(" Building the PES")
         self.pes = PES.from_options(
             lot=self.lot,
-            ad_idx=0,
-            multiplicity=1,
+            ad_idx=0, # Adiabatic index (default: 0)
+            multiplicity=1, # ! optional argument
         )
 
     # * 3. Build the topology
@@ -184,7 +187,7 @@ class ASE_SE_GSM:
         logging.info(f" Number of nodes is {self.gsm.nnodes}")
         logging.info(" Warning last node still not optimized fully")
         self.gsm.xyz_writer(
-            f"grown_string_{self.gsm.ID:03}.xyz",
+            f"grown_string_{self.gsm.ID:03}.xyz", #! wrong trajectory file written
             self.gsm.geometries,
             self.gsm.energies,
             self.gsm.gradrmss,
