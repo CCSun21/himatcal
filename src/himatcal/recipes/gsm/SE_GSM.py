@@ -52,7 +52,7 @@ class ASE_SE_GSM:
         atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in self.atom[0].symbols]
         return atoms, xyz, geom
 
-    # * 1. Build the LOT
+    # * 1. Build the LoT
     def build_lot(self):
         """
         build ase lot from calculator
@@ -144,6 +144,7 @@ class ASE_SE_GSM:
             opt_steps=50,
         )
 
+    # * 9. Run the GSM
     def run_gsm(self):
         self.gsm = SE_GSM.from_options(
             reactant=self.reactant,
@@ -157,6 +158,7 @@ class ASE_SE_GSM:
         )
         self.gsm.go_gsm(max_iters=50, opt_steps=10, rtype=2)
 
+    # * 10. Clean up the scratch directory
     def clean_scratch(self):
         if self.cleanup_scratch:
             cmd = f"rm scratch/growth_iters_{self.gsm.ID:03d}_*.xyz"
