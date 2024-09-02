@@ -3,15 +3,11 @@ from __future__ import annotations
 import contextlib
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ase import Atoms
 from ase.io import write
 
-from himatcal.recipes.crest.core import iMTD_GC, relax
-
-if TYPE_CHECKING:
-    from typing import Literal
+from himatcal.recipes.crest.core import iMTD_GC
 
 PF6 = Atoms(
     symbols="PF6",
@@ -206,6 +202,7 @@ def dock_atoms(
         logging.info("Crest iMTD-GC Sampling failed!")
     return processed_atoms
 
+# TODO: dock atoms using orca or xtb
 
 def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
     """

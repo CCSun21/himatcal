@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+from pyGSM.bin.gsm import post_processing  # type: ignore
 from pyGSM.coordinate_systems import (  # type: ignore
     DelocalizedInternalCoordinates,
     Distance,
@@ -18,7 +19,6 @@ from pyGSM.optimizers import eigenvector_follow  # type: ignore
 from pyGSM.potential_energy_surfaces import PES  # type: ignore
 from pyGSM.utilities import elements, manage_xyz, nifty  # type: ignore
 from pyGSM.utilities.cli_utils import get_driving_coord_prim  # type: ignore
-from pyGSM.utilities.cli_utils import plot as gsm_plot  # type: ignore
 
 
 class ASE_SE_GSM:
@@ -155,116 +155,7 @@ class ASE_SE_GSM:
             ADD_NODE_TOL=0.1,  # * default value is 0.1, for GSM
             CONV_TOL=0.0005,  # * prep grad
         )
-        self.gsm.set_V0()
-        self.gsm.nodes[0].gradrms = 0.0
-        self.gsm.nodes[0].V0 = self.gsm.nodes[0].energy
-        logging.info(f" Initial energy is {self.gsm.nodes[0].energy:1.4f}")
-        self.gsm.add_GSM_nodeR()
-        self.gsm.grow_string(max_iters=50, max_opt_steps=10)
-        if self.gsm.tscontinue:
-            self.gsm.pastts = self.gsm.past_ts()
-            logging.info(f"pastts {self.gsm.pastts}")
-            try:
-                if self.gsm.pastts == 1:  # normal over the hill
-                    self.gsm.add_GSM_nodeR(1)
-                    self.gsm.add_last_node(2)
-                elif self.gsm.pastts in [2, 3]:  # when cgrad is positive
-                    self.gsm.add_last_node(1)
-                    if (
-                        self.gsm.nodes[self.gsm.nR - 1].gradrms
-                        > 5.0 * self.gsm.options["CONV_TOL"]
-                    ):
-                        self.gsm.add_last_node(1)
-            except Exception:
-                logging.info("Failed to add last node, continuing.")
-        self.gsm.nnodes = self.gsm.nR
-        self.gsm.nodes = self.gsm.nodes[: self.gsm.nR]
-        self.energies = self.gsm.energies
-        if self.gsm.TSnode == self.gsm.nR - 1:
-            logging.info(" The highest energy node is the last")
-            logging.info(" not continuing with TS optimization.")
-            self.gsm.tscontinue = False
-        logging.info(f" Number of nodes is {self.gsm.nnodes}")
-        logging.info(" Warning last node still not optimized fully")
-        self.gsm.xyz_writer(
-            f"grown_string_{self.gsm.ID:03}.xyz", #! wrong trajectory file written
-            self.gsm.geometries,
-            self.gsm.energies,
-            self.gsm.gradrmss,
-            self.gsm.dEs,
-        )
-        logging.info(" SSM growth phase over")
-        self.gsm.done_growing = True
-
-    def post_process(self):
-        gsm_plot(self.gsm.energies, x=range(len(self.gsm.energies)), title=0)
-        ICs = [self.gsm.nodes[0].primitive_internal_coordinates]
-
-    def post_processing(self, analyze_ICs=False, have_TS=True):
-        gsm_plot(
-            fx=self.gsm.energies, x=range(len(self.gsm.energies)), title=self.gsm.ID
-        )
-
-        ICs = [self.gsm.nodes[0].primitive_internal_coordinates]
-        # TS energy
-        if have_TS:
-            minnodeR = np.argmin(self.gsm.energies[: self.gsm.TSnode])
-            TSenergy = self.gsm.energies[self.gsm.TSnode] - self.gsm.energies[minnodeR]
-            logging.info(f" TS energy: {TSenergy:5.4f}")
-            logging.info(
-                f" absolute energy TS node {self.gsm.nodes[self.gsm.TSnode].energy:5.4f}"
-            )
-            minnodeP = self.gsm.TSnode + np.argmin(self.gsm.energies[self.gsm.TSnode :])
-            logging.info(
-                " min reactant node: %i, min product node %i, TS node is %i"
-                % (minnodeR, minnodeP, self.gsm.TSnode)
-            )
-            # write TS node
-            self.gsm.xyz_writer(
-                f"TS_{self.gsm.ID:03d}.xyz",
-                [self.gsm.geometries[self.gsm.TSnode]],
-                [self.gsm.energies[self.gsm.TSnode]],
-                [self.gsm.gradrmss[self.gsm.TSnode]],
-                [self.gsm.dEs[self.gsm.TSnode]],
-            )
-
-            ICs.extend(
-                (
-                    self.gsm.nodes[minnodeR].primitive_internal_values,
-                    self.gsm.nodes[self.gsm.TSnode].primitive_internal_values,
-                    self.gsm.nodes[minnodeP].primitive_internal_values,
-                )
-            )
-            with Path.open(Path(f"IC_data_{self.gsm.ID:04d}.txt"), "w") as f:
-                f.write(
-                    f"Internals \t minnodeR: {minnodeR} \t TSnode: {self.gsm.TSnode} \t minnodeP: {minnodeP}\n"
-                )
-                for x in zip(*ICs):
-                    f.write("{}\t{}\t{}\t{}\n".format(*x))
-
-        else:
-            minnodeR = 0
-            minnodeP = self.gsm.nR
-            logging.info(
-                f" absolute energy end node {self.gsm.nodes[self.gsm.nR].energy:5.4f}"
-            )
-            logging.info(
-                f" difference energy end node {self.gsm.nodes[self.gsm.nR].difference_energy:5.4f}"
-            )
-            ICs.extend(
-                (
-                    self.gsm.nodes[minnodeR].primitive_internal_values,
-                    self.gsm.nodes[minnodeP].primitive_internal_values,
-                )
-            )
-            with Path.open(Path(f"IC_data_{self.gsm.ID}.txt"), "w") as f:
-                f.write(f"Internals \t Beginning: {minnodeR} \t End: {self.gsm.TSnode}")
-                for x in zip(*ICs):
-                    f.write("{}\t{}\t{}\n".format(*x))
-
-        # Delta E
-        deltaE = self.gsm.energies[minnodeP] - self.gsm.energies[minnodeR]
-        logging.info(f" Delta E is {deltaE:5.4f}")
+        self.gsm.go_gsm(max_iters=50, opt_steps=10, rtype=2)
 
     def clean_scratch(self):
         if self.cleanup_scratch:
@@ -284,5 +175,5 @@ class ASE_SE_GSM:
         self.create_optimizer()
         self.optimize_reactant()
         self.run_gsm()
-        self.post_processing()
+        post_processing(self.gsm, analyze_ICs=False, have_TS=True)
         self.clean_scratch()
