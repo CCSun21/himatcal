@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "himatcal"
 description = "High throughput material calculation"
-version = "0.1.5"
+version = "0.1.6"
 readme = "README.md"
 license = { text = "BSD-3" }
 authors = [{name = "Congcong Sun", email = "suncongcong000@foxmail.com"},]
@@ -25,7 +25,8 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    'quacc>=0.9.1', # quacc is a quantum chemistry calculation package
+    'quacc>=0.10.0', # quacc is a quantum chemistry calculation package
+    'numpy<2.0.0'
     ]
 
 [project.optional-dependencies]
@@ -49,7 +50,8 @@ mlp = [
     "keras<=3.4.1"
     ]
 molecule = [
-    "rdkit>=2024.3.1"
+    "rdkit>=2024.3.1",
+    "goodvibes>=3.2"
 ]
 
 [project.urls]

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal, Optional
+from typing import Any, Literal
 
 from ase import Atoms
 from ase.calculators.calculator import Calculator
 from ase.io import read, write
-from pydantic import BaseModel, Field, SkipValidation, field_validator
+from pydantic import field_validator
 from pyGSM.bin.gsm import cleanup_scratch, post_processing  # type: ignore
 from pyGSM.coordinate_systems.delocalized_coordinates import (  # type: ignore
     DelocalizedInternalCoordinates,
@@ -22,65 +22,47 @@ from pyGSM.molecule import Molecule  # type: ignore
 from pyGSM.optimizers.eigenvector_follow import eigenvector_follow  # type: ignore
 from pyGSM.optimizers.lbfgs import lbfgs  # type: ignore
 from pyGSM.potential_energy_surfaces import PES  # type: ignore
+from pyGSM.utilities.manage_xyz import XYZ_WRITERS
 
 from himatcal.recipes.gsm.core import atoms2geom, gsm2atoms
 
 
-class ASE_DE_GSM(BaseModel):
-    """
-    Represents a DE_GSM (Double-ended Geometric Surface Mapping) model for simulating molecular transformations. This class encapsulates the necessary attributes for defining the reactant and product molecules, along with their associated computational settings.
-
-    The DE_GSM class inherits from BaseModel and includes fields for specifying the reactant and product as either Atoms objects or file paths. It also allows for the inclusion of an ASE calculator and options to fix the geometries of the reactant and product during simulations.
-
-    Attributes:
-        reactant (Atoms | str): Reactant Atoms object or path to a file.
-        product (Atoms | str): Product Atoms object or path to a file.
-        calculator (Calculator | None): ASE calculator for performing calculations.
-        fixed_reactant (bool): Indicates whether to fix the reactant geometry.
-        fixed_product (bool): Indicates whether to fix the product geometry.
-
-    Examples:
-        To create a DE_GSM model, instantiate the class with the required parameters:
-        >>> model = DE_GSM(reactant='path/to/reactant.xyz', product='path/to/product.xyz')
-    """
-
-
-    reactant: SkipValidation[Atoms | str] = Field(
-        None, description="Reactant Atoms object or path to a file"
-    )
-    product: Atoms | str = Field(
-        None, description="Product Atoms object or path to a file"
-    )
-    calculator: Calculator | None = Field(None, description="ASE calculator")
-    multiplicity: int = Field(1, ge=1, description="Multiplicity")
-
-    # * GSM options
-    fixed_reactant: bool | None = Field(False, description="Fix the reactant geometry")
-    fixed_product: bool | None = Field(False, description="Fix the product geometry")
-    coordinate_type: Literal["TRIC", "DLC", "HDLC"] | None = Field(
-        "TRIC", description="Coordinate type"
-    )
-    optimizer_method: Literal["eigenvector_follow", "lbfgs"] | None = Field(
-        "eigenvector_follow", description="Optimizer method"
-    )
-    num_of_nodes: int | None = Field(11, ge=2, description="Number of nodes")
-    line_search: Literal["NoLineSearch", "backtrack"] | None = Field(
-        "NoLineSearch", description="Line search method"
-    )
-    conv_Ediff: float | None = Field(100.0, description="Energy difference convergence")
-    conv_gmax: float | None = Field(100.0, description="Max grad rms threshold")
-    DMAX: float | None = Field(0.1, description="Step size cap")
-    ID: int = Field(0, description="ID")
-    r_type: Literal[0, 1, 2] = Field(
-        1, description="0 for no climb, 1 for only climb, 2 for climb and find TS"
-    )
-    max_gsm_iterations: int = Field(100, description="Max GSM iterations")
-    max_opt_steps: int = Field(3, description="Max optimization steps")
-
-    class Config:
-        arbitrary_types_allowed = True
-        validate_assignment = False
-        validate_all = False
+class ASE_DE_GSM:
+    def __init__(self,
+                    reactant: Atoms | str | Any = None,
+                    product: Atoms | str | Any = None,
+                    calculator: Calculator | Any = None,
+                    multiplicity: int = 1,
+                    fixed_reactant: bool | Any = False,
+                    fixed_product: bool | Any = False,
+                    coordinate_type: Literal["TRIC", "DLC", "HDLC"] | Any = "TRIC",
+                    optimizer_method: Literal["eigenvector_follow", "lbfgs"] | Any = "eigenvector_follow",
+                    num_of_nodes: int | Any = 11,
+                    line_search: Literal["NoLineSearch", "backtrack"] | Any = "NoLineSearch",
+                    conv_Ediff: float | Any = 100.0,
+                    conv_gmax: float | Any = 100.0,
+                    DMAX: float | Any = 0.1,
+                    ID: int = 0,
+                    r_type: Literal[0, 1, 2] | Any = 1,
+                    max_gsm_iterations: int = 50,
+                    max_opt_steps: int = 3):
+            self.reactant = reactant
+            self.product = product
+            self.calculator = calculator
+            self.multiplicity = multiplicity
+            self.fixed_reactant = fixed_reactant
+            self.fixed_product = fixed_product
+            self.coordinate_type = coordinate_type
+            self.optimizer_method = optimizer_method
+            self.num_of_nodes = num_of_nodes
+            self.line_search = line_search
+            self.conv_Ediff = conv_Ediff
+            self.conv_gmax = conv_gmax
+            self.DMAX = DMAX
+            self.ID = ID
+            self.r_type = r_type
+            self.max_gsm_iterations = max_gsm_iterations
+            self.max_opt_steps = max_opt_steps
 
     # if reactant or product is str ,read atoms from file
     @field_validator("reactant", "product")
@@ -231,20 +213,21 @@ class ASE_DE_GSM(BaseModel):
             print_level=1,
             mp_cores=1,
             interp_method="DLC",
+            xyz_writer=XYZ_WRITERS["multixyz"]
         )
 
         # * 9. run the GSM
         logging.info("Main GSM Calculation")
         self.gsm.go_gsm(
-            max_gsm_iterations=self.max_gsm_iterations,
-            max_opt_steps=self.max_opt_steps,
+            max_iters=self.max_gsm_iterations,
+            opt_steps=self.max_opt_steps,
             rtype=self.r_type,
         )
 
         # * 10. write the results into an extended xyz file
         string_ase, ts_ase = gsm2atoms(self.gsm)
         write(f"opt_converged_{self.gsm.ID:03d}_ase.xyz", string_ase)
-        write(f"TSnode_{self.gsm.ID}.xyz", string_ase)
+        write(f"TSnode_{self.gsm.ID}.xyz", ts_ase)
 
         # * 11. post processing
         logging.info("Post processing")
@@ -253,5 +236,3 @@ class ASE_DE_GSM(BaseModel):
         # * 12. cleanup
         logging.info("Cleaning up")
         cleanup_scratch(self.gsm.ID)
-
-ASE_DE_GSM.model_rebuild()

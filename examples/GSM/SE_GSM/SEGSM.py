@@ -12,7 +12,7 @@ from himatcal.utils.os import labeled_dir
 
 main_workdir = Path.cwd()
 label = "IMI"
-atoms = [read(f"{main_workdir}/input.xyz")]  # * list of atoms
+atoms = read(f"{main_workdir}/input.xyz")
 
 """
 # * set driving coordinates with format ["BREAK"/"ADD", atom1, atom2] or ["ANGLE", atom1, atom2, atom3], or ["TORSION", atom1, atom2, atom3, atom4], or ["OOP", atom1, atom2, atom3, atom4]
@@ -22,9 +22,9 @@ driving_coords = [["BREAK", 1, 4]]
 _CWD = labeled_dir(main_workdir, label)
 #########   xTB example    ###############
 gsm = ASE_SE_GSM(
-    atom=atoms,
+    atoms=atoms,
     driving_coords=driving_coords,
-    calculator=XTB(method="gfn2-xtb", charge=-1, uhf=0, gbsa={"solvent": "acetone"}),
+    calculator=XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"}),
 )
 
 #########   ORCA example   ###############

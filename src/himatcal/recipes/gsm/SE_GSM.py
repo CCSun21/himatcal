@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 import os
-from pathlib import Path
 
-import numpy as np
+from ase.io import write
 from pyGSM.bin.gsm import post_processing  # type: ignore
 from pyGSM.coordinate_systems import (  # type: ignore
     DelocalizedInternalCoordinates,
@@ -17,12 +16,14 @@ from pyGSM.level_of_theories.ase import ASELoT  # type: ignore
 from pyGSM.molecule import Molecule  # type: ignore
 from pyGSM.optimizers import eigenvector_follow  # type: ignore
 from pyGSM.potential_energy_surfaces import PES  # type: ignore
-from pyGSM.utilities import elements, manage_xyz, nifty  # type: ignore
+from pyGSM.utilities import manage_xyz, nifty  # type: ignore
 from pyGSM.utilities.cli_utils import get_driving_coord_prim  # type: ignore
+
+from himatcal.recipes.gsm.core import atoms2geom, gsm2atoms
 
 
 class ASE_SE_GSM:
-    def __init__(self, atom, driving_coords, calculator=None, cleanup_scratch=False):
+    def __init__(self, atoms, driving_coords, calculator=None, cleanup_scratch=False):
         """
         Initializes the class with the specified atom and driving coordinates.
 
@@ -36,7 +37,7 @@ class ASE_SE_GSM:
 
         """
 
-        self.atom = atom
+        self.atoms = atoms
         self.driving_coords = driving_coords  # List: driving_coords = [["BREAK", 2, 3]]
         if calculator is None:
             from xtb_ase import XTB
@@ -44,13 +45,6 @@ class ASE_SE_GSM:
             calculator = XTB()
         self.calculator = calculator
         self.cleanup_scratch = cleanup_scratch
-
-    def atom2geom(self):
-        xyz = self.atom[0].positions
-        geom = np.column_stack([self.atom[0].symbols, xyz]).tolist()
-        ELEMENT_TABLE = elements.ElementData()
-        atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in self.atom[0].symbols]
-        return atoms, xyz, geom
 
     # * 1. Build the LoT
     def build_lot(self):
@@ -132,6 +126,7 @@ class ASE_SE_GSM:
             DMAX=0.5,
             abs_max_step=0.5,
             conv_Ediff=0.1,
+            opt_climb=True
         )
 
     # * 8. Optimize the reactant
@@ -167,7 +162,7 @@ class ASE_SE_GSM:
             os.system(cmd)
 
     def run(self):
-        self.atoms, self.xyz, self.geom = self.atom2geom()
+        self.atoms, self.xyz, self.geom = atoms2geom(self.atoms)
         self.build_lot()
         self.build_pes()
         self.build_topology()
@@ -178,4 +173,10 @@ class ASE_SE_GSM:
         self.optimize_reactant()
         self.run_gsm()
         post_processing(self.gsm, analyze_ICs=False, have_TS=True)
+
+        # * 10. write the results into an extended xyz file
+        string_ase, ts_ase = gsm2atoms(self.gsm)
+        write(f"opt_converged_{self.gsm.ID:03d}_ase.xyz", string_ase)
+        write(f"TSnode_{self.gsm.ID}.xyz", ts_ase)
+
         self.clean_scratch()

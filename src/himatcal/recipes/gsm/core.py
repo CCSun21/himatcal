@@ -1,14 +1,9 @@
 """core functions for GSM"""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from pyGSM.utilities import elements
-
-if TYPE_CHECKING:
-    from ase import Atoms
-
 import numpy as np
+from ase import Atoms
+from pyGSM.utilities import elements
 
 
 def atoms2geom(atoms: Atoms):
