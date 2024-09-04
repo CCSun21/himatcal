@@ -56,6 +56,8 @@ class HimatcalSettings(BaseSettings):
 
     GROMACS_PATH: Path = Field(Path(), description=("Path to the gromacs executable"))
 
+    ORCA_PATH: Path = Field(Path(), description=("Path to the ORCA executable"))
+
     # ---------------------------
     # external modle Settings
     # ---------------------------

@@ -23,7 +23,7 @@ from himatcal.recipes.gsm.core import atoms2geom, gsm2atoms
 
 
 class ASE_SE_GSM:
-    def __init__(self, atoms, driving_coords, calculator=None, cleanup_scratch=False):
+    def __init__(self, atoms, driving_coords, multiplicity = 1, calculator=None, cleanup_scratch=False):
         """
         Initializes the class with the specified atom and driving coordinates.
 
@@ -39,6 +39,7 @@ class ASE_SE_GSM:
 
         self.atoms = atoms
         self.driving_coords = driving_coords  # List: driving_coords = [["BREAK", 2, 3]]
+        self.multiplicity = multiplicity
         if calculator is None:
             from xtb_ase import XTB
 
@@ -60,7 +61,7 @@ class ASE_SE_GSM:
         self.pes = PES.from_options(
             lot=self.lot,
             ad_idx=0, # Adiabatic index (default: 0)
-            multiplicity=1, # ! optional argument
+            multiplicity=self.multiplicity,
         )
 
     # * 3. Build the topology
@@ -68,7 +69,7 @@ class ASE_SE_GSM:
         # * build the topology
         self.top = Topology.build_topology(
             self.xyz,
-            self.atoms,
+            self.atom,
         )
         # * add the driving coordinates to the topology
         driving_coord_prims = []
@@ -92,7 +93,7 @@ class ASE_SE_GSM:
         nifty.printcool("Building Primitive Internal Coordinates")
         self.p1 = PrimitiveInternalCoordinates.from_options(
             xyz=self.xyz,
-            atoms=self.atoms,
+            atoms=self.atom,
             addtr=True,  # Add TRIC
             topology=self.top,
         )
@@ -102,7 +103,7 @@ class ASE_SE_GSM:
         nifty.printcool("Building Delocalized Internal Coordinates")
         self.coord_obj1 = DelocalizedInternalCoordinates.from_options(
             xyz=self.xyz,
-            atoms=self.atoms,
+            atoms=self.atom,
             addtr=True,  # Add TRIC
             primitives=self.p1,
         )
@@ -162,7 +163,7 @@ class ASE_SE_GSM:
             os.system(cmd)
 
     def run(self):
-        self.atoms, self.xyz, self.geom = atoms2geom(self.atoms)
+        self.atom, self.xyz, self.geom = atoms2geom(self.atoms)
         self.build_lot()
         self.build_pes()
         self.build_topology()

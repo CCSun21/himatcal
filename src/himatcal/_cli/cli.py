@@ -265,11 +265,24 @@ def cas(
 
     get_molecular_structure(molecular_cas=cas, write_mol=write)
 
+@app.command(
+    "cas2xyz", help="Get molecular structure from CAS number and convert to xyz file", no_args_is_help=True
+)
+def cas2xyz(
+    cas: Annotated[str, typer.Argument(help="CAS number")],
+    relax: Annotated[bool, typer.Option(help="relax the molecule using crest")] = True,
+):
+    """
+    Get molecular structure from CAS number
+    """
+    from himatcal.recipes.mol.core import cas2xyz
+
+    cas2xyz(cas, relax_atoms=relax)
 
 @app.command("GSM", no_args_is_help=True)
 def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")], 
         dc: Annotated[str,typer.Argument(help='driving coordinates with format ["BREAK"/"ADD", atom1, atom2] or ["ANGLE", atom1, atom2, atom3], or ["TORSION", atom1, atom2, atom3, atom4], or ["OOP", atom1, atom2, atom3, atom4]')], 
-        calc: Annotated[Optional[str], typer.Argument(help="The program you use for calc (xtb, gaussian and orca is supported)")]= "xtb",
+        calc: Annotated[str | None, typer.Argument(help="The program you use for calc (xtb, gaussian and orca is supported)")]= "xtb",
         chg: int = 0,
         mult: int = 1,
         ):

@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from ase import Atoms
-from ase.calculators.calculator import Calculator
 from ase.io import read, write
 from pydantic import field_validator
 from pyGSM.bin.gsm import cleanup_scratch, post_processing  # type: ignore
@@ -22,9 +20,13 @@ from pyGSM.molecule import Molecule  # type: ignore
 from pyGSM.optimizers.eigenvector_follow import eigenvector_follow  # type: ignore
 from pyGSM.optimizers.lbfgs import lbfgs  # type: ignore
 from pyGSM.potential_energy_surfaces import PES  # type: ignore
-from pyGSM.utilities.manage_xyz import XYZ_WRITERS
+from pyGSM.utilities.manage_xyz import XYZ_WRITERS  # type: ignore
 
 from himatcal.recipes.gsm.core import atoms2geom, gsm2atoms
+
+if TYPE_CHECKING:
+    from ase import Atoms
+    from ase.calculators.calculator import Calculator
 
 
 class ASE_DE_GSM:
