@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional, Tuple
-
 import numba
 import torch
 from torch import Tensor
@@ -103,7 +101,7 @@ if _numba_cuda_available:
 
 def nblists_torch_pbc(
     coord: Tensor, cell: Tensor, cutoff: float
-) -> Tuple[Tensor, Tensor, Tensor]:
+) -> tuple[Tensor, Tensor, Tensor]:
     """Compute dense neighbor lists for periodic boundary conditions case.
     Coordinates must be in cartesian coordinates and be within the unit cell.
     Single crystal only, no support for batched coord or multiple unit cells.

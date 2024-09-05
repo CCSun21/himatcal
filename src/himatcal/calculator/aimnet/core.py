@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Union, dict
+from typing import Any
 
 import torch
 from torch import Tensor, nn
