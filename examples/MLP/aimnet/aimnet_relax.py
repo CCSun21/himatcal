@@ -9,10 +9,10 @@ from ase.io import read
 from himatcal.calculator.aimnet import AIMNet2ASE
 
 atoms_path = Path.cwd() / "input.xyz"
-charge = 0
+charge = -1
 mult = 1
 
-calc = AIMNet2ASE("aimnet2", charge=charge, mult=mult)
+calc = AIMNet2ASE("aimnet2_b973c", charge=charge, mult=mult)  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
 
 atoms = read(atoms_path)
 atoms.calc = calc

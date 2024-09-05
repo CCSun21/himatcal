@@ -28,3 +28,17 @@ pip install uv
 uv pip install himatcal
 uv pip install git+https://gitlab.com/ase/ase.git
 ```
+
+## extras
+
+```sh
+micromamba install -c conda-forge xtb
+uv pip install git+https://github.com/Quantum-Accelerators/xtb_ase.git
+uv pip install git+https://github.com/CCSun21/pysisyphus.git@dev
+```
+
+## aimnet2
+
+```sh
+pip install torch-cluster
+```

@@ -108,7 +108,7 @@ class AIMNet2ASE(Calculator):
         for k, v in results.items():
             results[k] = v.detach().cpu().numpy()
 
-        self.results["energy"] = results["energy"]
+        self.results["energy"] = results["energy"][0]
         self.results["charges"] = results["charges"]
         if "forces" in properties:
             self.results["forces"] = results["forces"]

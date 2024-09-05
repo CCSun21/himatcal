@@ -20,14 +20,15 @@ atoms = read(f"{main_workdir}/input.xyz")
 driving_coords = [["BREAK", 1, 4]]
 
 _CWD = labeled_dir(main_workdir, label)
-#########   xTB example    ###############
-gsm = ASE_SE_GSM(
-    atoms=atoms,
-    driving_coords=driving_coords,
-    calculator=XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"}),
-)
 
-#########   ORCA example   ###############
+######### *  xTB example    ###############
+# gsm = ASE_SE_GSM(
+#     atoms=atoms,
+#     driving_coords=driving_coords,
+#     calculator=XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"}),
+# )
+
+######### *  ORCA example   ###############
 # from ase.calculators.orca import ORCA
 # from ase.calculators.orca import OrcaProfile
 
@@ -48,7 +49,7 @@ gsm = ASE_SE_GSM(
 # )
 
 
-######### Gaussian example ###############
+######### * Gaussian example ###############
 # from ase.calculators.gaussian import Gaussian
 
 # calc = Gaussian(
@@ -65,6 +66,39 @@ gsm = ASE_SE_GSM(
 # )
 # gsm = ASE_SE_GSM(
 #     atom=atoms,
+#     driving_coords=driving_coords,
+#     calculator=calc,
+# )
+
+########## * AIMNet2 example #############
+from himatcal.calculator.aimnet import AIMNet2ASE
+
+calc = AIMNet2ASE(
+    "aimnet2_b973c", # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
+    charge= -1, # * charge setting works with aimnet2_b973c
+    mult=1,
+)
+
+gsm = ASE_SE_GSM(
+    atoms=atoms,
+    # multiplicity=mult,
+    driving_coords=driving_coords,
+    calculator=calc,
+)
+
+##########  * Oribital example ##############
+# from orb_models.forcefield import pretrained
+# from orb_models.forcefield.calculator import ORBCalculator
+
+# device="cuda" # * device= "cuda" / "cpu"
+# # orbff = pretrained.orb_v1(device=device)  # * not feasible for molecule
+# orbff = pretrained.orb_d3_v1(device=device) # * not feasible for molecule
+# # * other choice: orb_d3_sm_v1, orb_d3_xs_v1
+# calc = ORBCalculator(orbff, device=device)
+
+# gsm = ASE_SE_GSM(
+#     atoms=atoms,
+#     # multiplicity=mult,
 #     driving_coords=driving_coords,
 #     calculator=calc,
 # )
