@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from ase.io import read
 from monty.os import cd
-from xtb_ase import XTB
 
 from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
 from himatcal.utils.os import labeled_dir
@@ -22,11 +20,9 @@ driving_coords = [["BREAK", 1, 4]]
 _CWD = labeled_dir(main_workdir, label)
 
 ######### *  xTB example    ###############
-# gsm = ASE_SE_GSM(
-#     atoms=atoms,
-#     driving_coords=driving_coords,
-#     calculator=XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"}),
-# )
+# from xtb_ase import XTB
+
+# calc = XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"})
 
 ######### *  ORCA example   ###############
 # from ase.calculators.orca import ORCA
@@ -40,12 +36,6 @@ _CWD = labeled_dir(main_workdir, label)
 #     mult=1,
 #     orcasimpleinput="B3LYP g-d3 def2-TZVP EnGrad", # using EnGrad for force calculation
 #     orcablocks="%pal nprocs 16 end \n%maxcore 1000",
-# )
-
-# gsm = ASE_SE_GSM(
-#     atom=atoms,
-#     driving_coords=driving_coords,
-#     calculator=calc,
 # )
 
 
@@ -64,26 +54,14 @@ _CWD = labeled_dir(main_workdir, label)
 #     mem="64GB",
 #     nprocshared=16,
 # )
-# gsm = ASE_SE_GSM(
-#     atom=atoms,
-#     driving_coords=driving_coords,
-#     calculator=calc,
-# )
 
 ########## * AIMNet2 example #############
 from himatcal.calculator.aimnet import AIMNet2ASE
 
 calc = AIMNet2ASE(
-    "aimnet2_b973c", # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
-    charge= -1, # * charge setting works with aimnet2_b973c
+    "aimnet2_b973c",  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
+    charge=-1,  # * charge setting works with aimnet2_b973c
     mult=1,
-)
-
-gsm = ASE_SE_GSM(
-    atoms=atoms,
-    # multiplicity=mult,
-    driving_coords=driving_coords,
-    calculator=calc,
 )
 
 ##########  * Oribital example ##############
@@ -96,12 +74,12 @@ gsm = ASE_SE_GSM(
 # # * other choice: orb_d3_sm_v1, orb_d3_xs_v1
 # calc = ORBCalculator(orbff, device=device)
 
-# gsm = ASE_SE_GSM(
-#     atoms=atoms,
-#     # multiplicity=mult,
-#     driving_coords=driving_coords,
-#     calculator=calc,
-# )
 
+gsm = ASE_SE_GSM(
+    atoms=atoms,
+    # multiplicity=mult,
+    driving_coords=driving_coords,
+    calculator=calc,
+)
 with cd(_CWD):
     gsm.run()
