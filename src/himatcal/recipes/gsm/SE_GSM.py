@@ -23,7 +23,14 @@ from himatcal.recipes.gsm.core import atoms2geom, gsm2atoms
 
 
 class ASE_SE_GSM:
-    def __init__(self, atoms, driving_coords, multiplicity = 1, calculator=None, cleanup_scratch=False):
+    def __init__(
+        self,
+        atoms,
+        driving_coords,
+        multiplicity=1,
+        calculator=None,
+        cleanup_scratch=False,
+    ):
         """
         Initializes the class with the specified atom and driving coordinates.
 
@@ -60,7 +67,7 @@ class ASE_SE_GSM:
         nifty.printcool(" Building the PES")
         self.pes = PES.from_options(
             lot=self.lot,
-            ad_idx=0, # Adiabatic index (default: 0)
+            ad_idx=0,  # Adiabatic index (default: 0)
             multiplicity=self.multiplicity,
         )
 
@@ -127,7 +134,7 @@ class ASE_SE_GSM:
             DMAX=0.5,
             abs_max_step=0.5,
             conv_Ediff=0.1,
-            opt_climb=True
+            opt_climb=True,
         )
 
     # * 8. Optimize the reactant
@@ -148,9 +155,10 @@ class ASE_SE_GSM:
             optimizer=self.optimizer,
             xyz_writer=manage_xyz.write_std_multixyz,
             driving_coords=self.driving_coords,
-            DQMAG_MAX=0.8,  # * default value is 0.8
-            ADD_NODE_TOL=0.1,  # * default value is 0.1, for GSM
-            CONV_TOL=0.0005,  # * prep grad
+            DQMAG_MAX=1.5,  # * default value is 0.8, Maximum step size in single-ended mode
+            DQMAG_MIN=0.2,  # * default value is 0.8, Maximum step size in single-ended mode
+            ADD_NODE_TOL=0.1,  # * default value is 0.1, for GSM, Convergence tolerance for adding new node
+            CONV_TOL=0.0005,  # * Convergence tolerance for optimizing nodes
         )
         self.gsm.go_gsm(max_iters=50, opt_steps=10, rtype=2)
 
