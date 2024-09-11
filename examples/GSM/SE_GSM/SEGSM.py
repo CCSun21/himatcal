@@ -20,9 +20,9 @@ driving_coords = [["BREAK", 1, 4]]
 _CWD = labeled_dir(main_workdir, label)
 
 ######### *  xTB example    ###############
-# from xtb_ase import XTB
+from xtb_ase import XTB
 
-# calc = XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"})
+calc = XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"})
 
 ######### *  ORCA example   ###############
 # from ase.calculators.orca import ORCA
@@ -56,13 +56,13 @@ _CWD = labeled_dir(main_workdir, label)
 # )
 
 ########## * AIMNet2 example #############
-from himatcal.calculator.aimnet import AIMNet2ASE
+# from himatcal.calculator.aimnet import AIMNet2ASE
 
-calc = AIMNet2ASE(
-    "aimnet2_b973c",  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
-    charge=-1,  # * charge setting works with aimnet2_b973c
-    mult=1,
-)
+# calc = AIMNet2ASE(
+#     "aimnet2_b973c",  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
+#     charge=-1,  # * charge setting works with aimnet2_b973c
+#     mult=1,
+# )
 
 ##########  * Oribital example ##############
 # from orb_models.forcefield import pretrained

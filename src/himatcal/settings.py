@@ -40,7 +40,7 @@ class HimatcalSettings(BaseSettings):
 
     CREST_EXE_PATH_V3: Path = Field(
         Path(), description=("Path to the crest executable")
-    )  # TODO: test the difference between CREST_EXE_PATH and CREST_EXE_PATH_V3
+    )
 
     ISOSTAT_EXE_PATH: Path = Field(
         Path(), description=("Path to the isostat executable")

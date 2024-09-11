@@ -7,7 +7,6 @@ from mp_api.client import MPRester
 from himatcal import SETTINGS
 
 mpr = MPRester(api_key=SETTINGS.MAPI_KEY)
-# TODO: Add API key to the MPRester object
 
 
 def get_mp_formula(formula):
