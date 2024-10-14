@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ase import Atoms
 
 
-def view_atoms(atoms:Atoms, fmt="xyz"):
+def view_atoms(atoms: Atoms, fmt="xyz"):
     """
     View atoms using a 3D molecular viewer.
 
@@ -38,7 +38,7 @@ def view_atoms(atoms:Atoms, fmt="xyz"):
     return view
 
 
-def show_xyz_mol(xyz_file:Path):
+def show_xyz_mol(xyz_file: Path):
     """
     Visualize a stk molecule using py3Dmol.
     """
@@ -56,7 +56,7 @@ def show_xyz_mol(xyz_file:Path):
     p.show()
 
 
-def xyz_to_mol(xyz_file:Path, write_mol=True):
+def xyz_to_mol(xyz_file: Path, write_mol=True):
     """
     Convert a xyz file to a mol file and block.
     """
@@ -90,3 +90,15 @@ def init_style():
         pkg_resources.resource_filename("himatcal", "tools/science-1.mplstyle")
     )
     plt.rcParams["font.family"] = "Calibri, Microsoft YaHei"
+
+
+def mpl_view_atoms(atoms):
+    """
+    view atoms using matplotlib at top and side view
+    """
+    import matplotlib.pyplot as plt
+    from ase.visualize.plot import plot_atoms
+
+    fig, axs = plt.subplots(1, 2, figsize=(5, 5))
+    plot_atoms(atoms, axs[0])
+    plot_atoms(atoms, axs[1], rotation=("-90x"))

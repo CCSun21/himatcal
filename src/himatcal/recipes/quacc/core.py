@@ -30,3 +30,8 @@ def relax_job(
     return Summarize(
         additional_fields={"name": "MLP Relax"} | (additional_fields or {})
     ).opt(dyn)
+
+
+# TODO: load quacc result from json file
+
+

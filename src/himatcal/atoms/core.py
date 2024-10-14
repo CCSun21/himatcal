@@ -230,3 +230,21 @@ def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
         filepath = _CWD / filename
     write(filepath, atoms, format="xyz")
     return filepath
+
+
+def add_cell(atoms, cell_parameters):
+    """
+    Add cell parameters to the atoms object.
+
+    Args:
+
+        atoms (ase.Atoms): The atoms object.
+        cell_parameters (list): The cell parameters.
+
+    Returns:
+
+        atoms (ase.Atoms): The atoms object with cell parameters.
+    """
+
+    atoms.set_cell(cell_parameters)
+    return atoms
