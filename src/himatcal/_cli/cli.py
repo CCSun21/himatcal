@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from typing import Annotated
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Optional
-from datetime import datetime, timezone
-from monty.os import cd
 
 import typer
-from rich import print
 from ase.io import read, write
-
+from monty.os import cd
+from rich import print
 
 app = typer.Typer(
     name="himatcal",
@@ -292,6 +290,7 @@ def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")
     atoms = [read(Path(file))]
     if calc=="xtb":
         from xtb_ase import XTB
+
         from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
 
         gsm = ASE_SE_GSM(
@@ -320,8 +319,7 @@ def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")
             calculator=calc,
         )
     elif calc == "orca":
-        from ase.calculators.orca import ORCA
-        from ase.calculators.orca import OrcaProfile
+        from ase.calculators.orca import ORCA, OrcaProfile
 
         profile = OrcaProfile(command="/home/suncc/orca_6_0_0/orca")
 

@@ -10,6 +10,9 @@ from himatcal import SETTINGS
 
 
 def save_to_db(label, info=None, database="himat", collection_name="job"):
+    """
+    Save a document to the database.
+    """
     if info is None:
         info = {}
     store = MongoURIStore(
@@ -30,6 +33,9 @@ def save_to_db(label, info=None, database="himat", collection_name="job"):
 
 
 def load_from_db(label, database="himat", collection_name="job"):
+    """
+    Load a document from the database.
+    """
     store = MongoURIStore(
         uri=SETTINGS.MONGODB_URI,
         database=database,

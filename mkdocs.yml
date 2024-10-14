@@ -2,41 +2,9 @@ site_name: himatcal
 site_author: Congcong Sun
 site_description: >-
   This is the himatcal package!
-nav:
-  - Home: index.md
-  - Overview:
-      - example_docs/intro/why.md
-      - example_docs/intro/resources.md
-  - Setup:
-      - example_docs/setup/prep.md
-      - example_docs/setup/name.md
-      - example_docs/setup/basics.md
-  - Installation:
-      - example_docs/installation/pyproject.md
-      - example_docs/installation/install.md
-  - Code:
-      - example_docs/code/source.md
-      - example_docs/code/hints.md
-      - example_docs/code/tests.md
-  - Documentation:
-      - example_docs/mkdocs/docs.md
-      - example_docs/mkdocs/build.md
-  - GitHub and CI:
-      - example_docs/github/commits.md
-      - example_docs/github/workflows.md
-  - Miscellaneous:
-      - example_docs/other/linting.md
-      - example_docs/other/apps.md
-  - Code Documentation: reference/ # keep me!
-  - About:
-      - example_docs/about/changelog.md
-      - example_docs/about/conduct.md
-      - example_docs/about/license.md
 
-repo_url: https://github.com/CCSun21/himatcal/
-edit_uri: blob/main/docs/
-
-theme:
+theme:  
+  name: "material"  
   features:
     - content.action.edit
     - content.code.copy
@@ -54,10 +22,9 @@ theme:
     - search.share
     - header.autohide
     - toc.follow
-  name: material
   palette:
-    primary: orange
-    scheme: slate
+    primary: teal
+    scheme: default
 
 markdown_extensions:
   - abbr
@@ -95,19 +62,31 @@ markdown_extensions:
       custom_checkbox: true
   - pymdownx.tilde
 
-plugins:
+plugins: 
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - autorefs
-  - social
   - offline
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
   - mkdocstrings:
       default_handler: python
       handlers:
         python:
           import:
             - https://docs.python.org/3/objects.inv
+            - https://wiki.fysik.dtu.dk/ase/objects.inv
+            - https://pymatgen.org/objects.inv
+            - https://materialsproject.github.io/pymatgen-analysis-defects/objects.inv
+            - https://materialsproject.github.io/maggma/objects.inv
+            - https://materialsproject.github.io/emmet/objects.inv
+            - https://materialsproject.github.io/jobflow/objects.inv
             - https://numpy.org/doc/stable/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
+            - https://phonopy.github.io/phonopy/objects.inv
           options:
             docstring_style: numpy
             docstring_section_style: list
@@ -115,12 +94,7 @@ plugins:
             merge_init_into_class: true
             docstring_options:
               ignore_init_summary: true
-  - gen-files:
-      scripts:
-        - docs/gen_ref_pages.py
-  - literate-nav:
-      nav_file: SUMMARY.md
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/CCSun21/himatcal
+            show_signature_annotations: true
+            signature_crossrefs: true
+            show_if_no_docstring: true
+            show_traceback: true
