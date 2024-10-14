@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-def constraints_indices_add(indices_list, num_add):
+def constraints_indices_add(indices_list, num_add) -> list:
     """
     Add a specified number to each index in the given list of indices.
 

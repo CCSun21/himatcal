@@ -28,7 +28,6 @@ class Atom:
 
     """
 
-    global periodic_table
     periodic_table: ClassVar[list[str]] = [
         "H",
         "He",
@@ -720,12 +719,10 @@ class Molecule:
         :return coordinate_list(list(size n) of tuple of float(size 3)):
 
         """
-        coordinate_list = []
         atom_list = self.atom_list
         if "coords" in self.atom_feature:
             return self.atom_feature["coords"]
-        for atom in atom_list:
-            coordinate_list.append([atom.x, atom.y, atom.z])
+        coordinate_list = [[atom.x, atom.y, atom.z] for atom in atom_list]
         return np.array(coordinate_list)
 
     def print_coordinate_list(self, option="element"):
@@ -760,8 +757,7 @@ class Molecule:
         """
         atom_list = self.atom_list
         n = len(atom_list)
-        f = open(file_directory, "w")
-        if True:  # If inappropriate geometry condition is determined, it will be added
+        with open(file_directory, "w") as f:
             content = str(n) + "\n"
             if self.energy is not None:
                 content = content + str(self.energy) + "\n"
@@ -770,9 +766,6 @@ class Molecule:
             f.write(content)
             for atom in atom_list:
                 f.write(atom.get_content(option, criteria))
-            f.close()
-        else:
-            print("Wrong geometry!!!")
 
     def get_normal_vector(self, idx1, idx2, idx3):
         """

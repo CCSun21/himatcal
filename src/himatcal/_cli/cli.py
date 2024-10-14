@@ -17,7 +17,7 @@ app = typer.Typer(
 )
 
 
-def machine_name():
+def machine_name() -> list:
     """
     Returns a list of machine names.
 

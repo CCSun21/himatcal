@@ -22,15 +22,9 @@ PF6 = Atoms(
     ],
 )
 
-Li = Atoms(
-    symbols="Li",
-    positions=[[0, 0, 0]],
-)
+Li = Atoms(symbols="Li", positions=[[0, 0, 0]])
 
-Na = Atoms(
-    symbols="Na",
-    positions=[[0, 0, 0]],
-)
+Na = Atoms(symbols="Na", positions=[[0, 0, 0]])
 
 elements = [
     "",
@@ -191,18 +185,24 @@ def dock_atoms(
     for _ in range(3):
         logging.info(f"Trying sampling the docked atoms using iMTD-GC the {_} time")
         with contextlib.suppress(Exception):
-            processed_atoms = iMTD_GC(docked_atoms, chg=chg, mult=mult, topo_change=topo_change)
+            processed_atoms = iMTD_GC(
+                docked_atoms, chg=chg, mult=mult, topo_change=topo_change
+            )
             break
     if processed_atoms is None:
         logging.info("Sampling failed, trying the docked atoms with topology change")
         for _ in range(3):
             with contextlib.suppress(Exception):
-                processed_atoms = iMTD_GC(docked_atoms, chg=chg, mult=mult, topo_change=True)
+                processed_atoms = iMTD_GC(
+                    docked_atoms, chg=chg, mult=mult, topo_change=True
+                )
                 break
         logging.info("Crest iMTD-GC Sampling failed!")
     return processed_atoms
 
+
 # TODO: dock atoms using orca or xtb
+
 
 def tmp_atoms(atoms, filename="tmp.xyz", create_tmp_folder=True):
     """
