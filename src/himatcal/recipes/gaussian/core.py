@@ -80,6 +80,7 @@ def static_job(
     label: str = "static",
     xc: str = "wb97xd",
     basis: str = "def2tzvp",
+    freq: bool = True,
     copy_files: SourceDirectory | dict[SourceDirectory, Filenames] | None = None,
     **calc_kwargs,
 ) -> RunSchema:
@@ -126,6 +127,9 @@ def static_job(
         "gfinput": "",
         "ioplist": ["6/7=3", "2/9=2000"],  # see ASE issue #660
     }
+    if freq:
+        calc_defaults["freq"] = ""
+
     return run_and_summarize(
         atoms,
         charge=charge,
