@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import urllib.request
 from io import StringIO
 
 import requests
@@ -41,10 +42,12 @@ def get_molecular_structure(
         mol = Chem.AddHs(mol, addCoords=True)
         if write_mol:
             Chem.MolToXYZFile(mol, f"{molecular_cas}.xyz")
+        return mol
     except Exception as e:
         return f"Unexpected error: {e}"
 
     # TODO: relax atoms using CREST and update the function on MCS
+
 
 def consumeApi(urlPath):
     dataResponse = requests.get(urlPath)
@@ -70,9 +73,43 @@ def cas2xyz(CAS_ID, relax_atoms=True):
     Examples:
         cas2xyz("50-00-0")  # Converts the CAS ID for formaldehyde to an XYZ file.
     """
-    URL_CAS_PATH_INFO = f"https://commonchemistry.cas.org/api/detail?cas_rn={CAS_ID}"
-    result_dict = json.loads(consumeApi(URL_CAS_PATH_INFO))
-    mol = Chem.MolFromInchi(result_dict["inchi"])
+    sources = [
+        f"https://commonchemistry.cas.org/api/detail?cas_rn={CAS_ID}",
+        f"https://www.chemicalbook.com/CAS/mol/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20210305/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20210111/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20180601/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20150408/MOL/{CAS_ID}.mol",
+    ]
+
+    mol = None
+    for source in sources:
+        try:
+            if "commonchemistry" in source:
+                result_dict = json.loads(consumeApi(source))
+                mol = Chem.MolFromInchi(result_dict["inchi"])
+            else:
+                request = urllib.request.Request(
+                    source, headers={"User-Agent": "Mozilla/5.0"}
+                )
+                response = urllib.request.urlopen(request)
+                if response.status == 200:
+                    mol_file_content = response.read().decode("utf-8")
+                    mol = Chem.MolFromMolBlock(mol_file_content, removeHs=False)
+            if mol:
+                break
+        except Exception:
+            # print(f"Failed to retrieve data from {source}: {e}")
+            continue
+
+    if not mol:
+        try:
+            mol = get_molecular_structure(CAS_ID)
+        except Exception as e:
+            raise ValueError(
+                f"Could not retrieve molecular data for CAS ID {CAS_ID}"
+            ) from e
+
     mol = Chem.AddHs(mol, addCoords=True)
     AllChem.EmbedMultipleConfs(mol, numConfs=10)
     if relax_atoms:

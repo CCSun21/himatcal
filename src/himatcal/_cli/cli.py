@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
-from ase.io import read, write
+from ase.io import read
 from monty.os import cd
 from rich import print
 
