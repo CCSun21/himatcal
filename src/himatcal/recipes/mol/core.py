@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import urllib.request
 from io import StringIO
+from pathlib import Path
 
 import requests
 from ase.io import write
@@ -80,6 +81,7 @@ def cas2xyz(CAS_ID, relax_atoms=True):
         f"https://www.chemicalbook.com/CAS/20210111/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20180601/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20150408/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20200515/MOL/{CAS_ID}.mol"
     ]
 
     mol = None
@@ -118,3 +120,5 @@ def cas2xyz(CAS_ID, relax_atoms=True):
         write(f"{CAS_ID}.xyz", atoms_relaxed)
     else:
         Chem.MolToXYZFile(mol, f"{CAS_ID}.xyz")
+    with Path.open(Path(f"{CAS_ID}.xyz")) as file:
+        return file.read()

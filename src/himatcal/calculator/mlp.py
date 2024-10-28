@@ -8,7 +8,7 @@ def get_calc(label, kwargs: dict | None = None):
     kwargs = kwargs or {}
     device = kwargs.get("device", "cuda" if label.startswith("orb") else "cpu")
 
-    if label.startswith("orb"):  # * orb_v1, orb_d3_v1, orb_d3_xm_v1, orb_d3_sm_v1
+    if label.startswith("orb"):  # * orb_v2, orb_d3_v2, orb_d3_xm_v2, orb_d3_sm_v2
         from orb_models.forcefield import pretrained
         from orb_models.forcefield.calculator import ORBCalculator
 
@@ -51,4 +51,8 @@ def get_calc(label, kwargs: dict | None = None):
         from chgnet.model.dynamics import CHGNetCalculator
 
         return CHGNetCalculator(model_path=kwargs.get("model"), use_device=device)
+    if label == "aimnet2":
+        from himatcal.calculator.aimnet import AIMNet2ASE
+
+        return AIMNet2ASE("aimnet2_b973c", charge=kwargs.get("charge", 0), mult=kwargs.get("mult", 1))
     return None

@@ -73,8 +73,7 @@ class PySCFCalculator(Calculator):
         self.mf.analyze(verbose=0)
         _, charges = self.mf.mulliken_pop(verbose=0)
 
-        self.results = {}
-        self.results["energy"] = self.mf.energy_tot() * ase.units.Hartree
+        self.results = {"energy": self.mf.energy_tot() * ase.units.Hartree}
         self.results["forces"] = (
             -np.array(self.mf.Gradients().kernel()) * ase.units.Hartree / ase.units.Bohr
         )
