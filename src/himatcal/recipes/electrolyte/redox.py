@@ -40,7 +40,7 @@ class RedoxCal(BaseModel):
         None, description="The molecular structure for the calculations."
     )
     chg_mult: list[int] = Field(
-        default_factory=lambda: [-1, 1, 0, 2, 1, 1, 0, 2],
+        default_factory=lambda: [-1, 1, 0, 2, 1, 1, 0, 2], # * [-1, 1, 0, 2, 1, 1, 0, 2] for molecule with ion, [0, 1, 1, 2, 0, 1, -1, 2] for molecule without ion
         description="Charge multiplicities for the calculations.",
     )
     add_ion: bool = Field(
