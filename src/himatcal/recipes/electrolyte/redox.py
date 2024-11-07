@@ -50,6 +50,7 @@ class RedoxCal(BaseModel):
         default_factory=lambda: [PF6, "Li"],
         description="Ions involved in the calculations.",
     )
+    protonate_ion_string: bool = Field(True, description="Indicates whether to protonate the ion.")
     label: str = Field("redox", description="A label for the calculations.")
     calc_kwards: dict = Field(
         default_factory=lambda: {
