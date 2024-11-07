@@ -4,6 +4,7 @@ import json
 import logging
 import subprocess
 from pathlib import Path
+
 from monty.os import cd
 
 from himatcal import SETTINGS
@@ -72,7 +73,7 @@ def extract_resp2(fchk_file):
     )
     if result.stdin:
         result.stdin.write(f"{fchk_file}\n")
-        result.stdin.write("7\n18\n1\ny\n0\n0\nq\n")  #* Multiwfn RESP2 calculation
+        result.stdin.write("7\n18\n1\ny\n0\n0\nq\n")  # * Multiwfn RESP2 calculation
     else:
         raise RuntimeError("Failed to write to stdin of the subprocess")
     out, err = result.communicate()
@@ -168,9 +169,10 @@ def merge_chgs(chg_file_1, chg_file_2):
     write_chg_file(averaged_data, output_file)
     return output_file
 
+
 def write_sobtopini():
-        ## * write a sobtop.ini file in the current directory
-        content = f"""  nthreads= 4  // Number of threads used for parallel calculation
+    ## * write a sobtop.ini file in the current directory
+    content = f"""  nthreads= 4  // Number of threads used for parallel calculation
         iskipgendih= 0  // 1: Skip generating dihedral terms, 0: Do not skip
         ioutatminfo= 0  // 1: Output atomic coordinates and connectivities when to atminfo.txt in current folder when loading input file, 0: Do not output to file but shown on screen
         ichggeom= 1  // 1: When loading .chg file, replace current geometry with that in .chg file, 0: Do not replace
@@ -178,5 +180,5 @@ def write_sobtopini():
         bondcrit= 1.15  // When pdb/pqr is used as input, two atoms are considered as bonded if their distance is smaller than sum of their covalent radii multiplied by this factor. Priority is lower than the criteria defined in bondcrit.dat
         Multiwfn_cmd= "{SETTINGS.MULTIWFN_PATH}"// Path of executable file of Multiwfn
         OpenBabel_cmd= "{SETTINGS.OBABEL_PATH}" // Path of executable file of OpenBabel"""
-        with Path.cwd().joinpath("sobtop.ini").open("w") as f:
-            f.write(content)
+    with Path.cwd().joinpath("sobtop.ini").open("w") as f:
+        f.write(content)

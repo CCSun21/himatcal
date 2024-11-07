@@ -209,7 +209,6 @@ slurm_title = """#!/bin/bash
 source /usr/local/gromacs/bin/GMXRC.bash
 """
 
-
 def slurm_min(pre_step: str = "init.pdb", current_step: str = "min") -> str:
     return f"""# gromacs minimization
 ## generate the tpr file for gromacs
@@ -260,8 +259,7 @@ def gmx_min(pdb_file: str, submit_job=False, **calc_kwards) -> None:
         subprocess.run(["sbatch", str(slurm_path)], check=True, text=True)
 
 
-def gmx_write_topo(compound_dict):
-    itp_folder = "/home/suncc/Code/pub/himatcal/examples/EleCal/MD/itp"
+def gmx_write_topo(compound_dict, itp_folder: str = None) -> None:
     with Path("topol.top").open("w") as f:
         f.write("[ defaults ]\n")
         f.write("  ;nbfunc  comb-rule  gen-pairs  fudgeLJ  fudgeQQ\n")
@@ -279,23 +277,41 @@ def gmx_write_topo(compound_dict):
             f.write(f'{compound}           {compound_dict[compound]["mol"]}\n')
 
 
+def build_box(data, compound_dict, mol_path):
+    from himatcal.recipes.electrolyte.sol_stru.build_box import ElectrolyteBuilder
+
+    density = data["density"]
+    box = data["box"]
+    capital = True
+
+    builder = ElectrolyteBuilder(mol_path=mol_path)
+    builder.build_box(
+        box_electrolyte_composition=compound_dict,
+        density=density,
+        box=box,
+        save_path="init.pdb",
+        capital=capital,
+    )
+
 def gmx_solvation_md(yaml_file, submit_job=False):
     with Path.open(Path(yaml_file)) as f:
         data = yaml.safe_load(f)
         compound_dict = data["compound_dict"]
         mdp_files = data["mdp_files"]
         build_pdb = data["build_pdb"]
+        mol_path = data["pdb_folder"]
+        itp_folder = data["itp_folder"]
 
     # * write the pdb file
     if build_pdb:
-        build_box(data, compound_dict)
+        build_box(data, compound_dict, mol_path)
     else:
         pdb_file = data["pdb_file"]
         # * copy  pdb_file to init.pdb
         Path(pdb_file).rename("init.pdb")
 
     # * write the topol.top file
-    gmx_write_topo(compound_dict)
+    gmx_write_topo(compound_dict, itp_folder)
 
     # * write the mdp files from the list
     for mdp_file in mdp_files:
@@ -327,25 +343,5 @@ def gmx_solvation_md(yaml_file, submit_job=False):
         result = subprocess.run(
             ["sbatch", str(slurm_path)], check=True, text=True, capture_output=True
         )
-        print(result.stdout)
-        print(result.stderr)  # TODO: capture the slurm job id and return it
-
-
-def build_box(data, compound_dict):
-    from himatcal.recipes.electrolyte.sol_stru.build_box import ElectrolyteBuilder
-
-    mol_path = (
-        "/home/suncc/Code/streamlit_apps/electrolyte_mbuild/packmol_build/GAFF/mol"
-    )
-    density = data["density"]
-    box = data["box"]
-    capital = True
-
-    builder = ElectrolyteBuilder(mol_path=mol_path)
-    builder.build_box(
-        box_electrolyte_composition=compound_dict,
-        density=density,
-        box=box,
-        save_path="init.pdb",
-        capital=capital,
-    )
+        # print(result.stdout)
+        # print(result.stderr)  # TODO: capture the slurm job id and return it

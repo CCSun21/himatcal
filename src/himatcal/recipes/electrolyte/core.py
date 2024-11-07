@@ -25,10 +25,10 @@ class RedoxPotential:
             calc_kwards = {
                 "opt_xc": "b3lyp",
                 "opt_basis": "6-31G* em=GD3BJ",
-                "gas_xc": "m062x",
-                "gas_basis": "6-311G**",
+                "gas_xc": "b3lyp",
+                "gas_basis": "6-311+G**",
                 "sol_xc": "m062x",
-                "sol_basis": "6-311G**", # only for solvent gibbs free energy correction
+                "sol_basis": "6-31G*", # only for solvent gibbs free energy correction
                 "solvent": "Acetone",
             }
         if chg_mult is None:
@@ -38,6 +38,9 @@ class RedoxPotential:
         self.chg_mult = chg_mult
         self.calc_type = calc_type
         self.calc_kwards = calc_kwards
+        # Ensure 'gas_xc' and 'gas_basis' keys exist
+        self.calc_kwards.setdefault("gas_xc", "m062x")
+        self.calc_kwards.setdefault("gas_basis", "6-311G**")
 
     # * 1. relax the molecule in low level of theory
     def relax_llot(self, chg: int, mult: int, kwargs: dict | None = None):

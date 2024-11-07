@@ -12,6 +12,8 @@ from himatcal.recipes.electrolyte.core import RedoxPotential
 if TYPE_CHECKING:
     from ase import Atoms
 
+from ase import Atoms
+
 
 class RedoxCal(BaseModel):
     """
@@ -63,19 +65,21 @@ class RedoxCal(BaseModel):
         default_factory=lambda: {"xtb_proc": 16},
         description="keyword arguments for Machine-specific.",
     )
+    neutral_molecule: Atoms | None = None
+    charged_molecule: Atoms | None = None
 
     class Config:
         arbitrary_types_allowed = True
 
-    @field_validator("chg_mult", pre=True, always=True)
+    @field_validator("chg_mult")
     def set_chg_mult(cls, v):
         return v or [-1, 1, 0, 2, 1, 1, 0, 2]
 
-    @field_validator("ions", pre=True, always=True)
+    @field_validator("ions")
     def set_ions(cls, v):
         return v or [PF6, "Li"]
 
-    @field_validator("calc_kwards", pre=True, always=True)
+    @field_validator("calc_kwards")
     def set_calc_kwards(cls, v):
         return v or {
             "opt_xc": "b3lyp",
@@ -274,3 +278,6 @@ class RedoxCal(BaseModel):
         oxidation_potential = self.get_ox()
         reduction_potential = self.get_re()
         return [oxidation_potential, reduction_potential]
+
+
+RedoxCal.model_rebuild()

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKINGx
+from typing import TYPE_CHECKING
 
 from monty.os import cd
 
