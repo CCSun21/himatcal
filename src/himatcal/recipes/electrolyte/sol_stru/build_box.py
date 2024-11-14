@@ -75,7 +75,6 @@ class ElectrolyteBuilder:
         with Path.open(Path(pdb_save_path), "w") as f:
             f.writelines(lines)
 
-    # TODO Rename this here and in `fix_pdb`
     def extracted_LiPF6(self, round_componds_dict, arg1):
         MOL_LPF6 = round_componds_dict[arg1]["mol"]
         del round_componds_dict[arg1]

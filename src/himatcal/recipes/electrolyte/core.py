@@ -25,10 +25,10 @@ class RedoxPotential:
             calc_kwards = {
                 "opt_xc": "b3lyp",
                 "opt_basis": "6-31G* em=GD3BJ",
-                "gas_xc": "b3lyp",
+                "gas_xc": "m062x",
                 "gas_basis": "6-311+G**",
                 "sol_xc": "m062x",
-                "sol_basis": "6-31G*", # only for solvent gibbs free energy correction
+                "sol_basis": "6-311+G**",  # only for solvent gibbs free energy correction
                 "solvent": "Acetone",
             }
         if chg_mult is None:
@@ -88,7 +88,7 @@ class RedoxPotential:
             "chk": "Gaussian.chk",
             "nprocshared": 64,
             "xc": "m062x",
-            "basis": "6-311G**",
+            "basis": "6-311+G**",
             "scf": ["maxcycle=250", "xqc"],
             "integral": "ultrafine",
             "nosymmetry": "",
@@ -125,12 +125,15 @@ class RedoxPotential:
             tuple: A tuple containing the Gibbs free energy and single point energy in eV.
 
         """
-
         if chg_status == "neutral":
+            if self.neutral_molecule is None:
+                raise ValueError("neutral_molecule is None")
             self.molecule = self.neutral_molecule.copy()
             self.chg = self.chg_mult[0]
             self.mult = self.chg_mult[1]
         elif chg_status == "charged":
+            if self.charged_molecule is None:
+                raise ValueError("charged_molecule is None")
             self.molecule = self.charged_molecule.copy()
             self.chg = self.chg_mult[2]
             self.mult = self.chg_mult[3]
@@ -206,4 +209,6 @@ class RedoxPotential:
             potential = -(
                 delta_G_gas - delta_G_solvention_neutral + delta_G_solvention_charged
             )
-        return potential - 1.44
+
+        logging.info(r"default potential unit is V, referring to Li/Li+, which is chosen as E_{abs} - 4.42 + 3.02 = E_{abs} - 1.4  V; To convert to SHE, please add 1.4 and then minus 4.42 V; more detail please refer to the paper Borodin, O.; Behl, W.; Jow, T. R. Oxidative Stability and Initial Decomposition Reactions of Carbonate, Sulfone, and Alkyl Phosphate-Based Electrolytes. J. Phys. Chem. C 2013, 117 (17), 8661-8682. https://doi.org/10.1021/jp400527c.")
+        return potential - 1.4

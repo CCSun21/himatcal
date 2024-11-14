@@ -88,6 +88,9 @@ def iMTD_GC(
         atoms_name = "input.xyz"
         write(atoms_name, atoms)
         uhf = mult - 1
+        if SETTINGS.CREST_EXE_PATH_V3 is None:
+            logger.error("CREST_EXE_PATH_V3 is not set in the settings.")
+            return None
         protonate_cmd = f"{SETTINGS.CREST_EXE_PATH_V3} {atoms_name} --{gfn_level} -chrg {chg} -uhf {uhf} --T {threads}"
         if alpb:
             protonate_cmd += f" -alpb {alpb}"

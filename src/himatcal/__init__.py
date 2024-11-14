@@ -14,4 +14,7 @@ __version__ = version("himatcal")
 SETTINGS = HimatcalSettings()
 
 # set logging info
-logging.basicConfig(level=logging.DEBUG if SETTINGS.DEBUG else logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG if SETTINGS.DEBUG else logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)

@@ -176,6 +176,7 @@ class RedoxCal(BaseModel):
             self.charged_molecule = relax(
                 self.molecule, chg=self.chg_mult[6], mult=self.chg_mult[7]
             )
+        logging.info("Molecule generation and relaxation complete")
 
     def cal_ox(self):
         """
@@ -192,6 +193,7 @@ class RedoxCal(BaseModel):
         """
 
         # * calculate the oxidation state energies (in eV)
+        logging.info("Calculating oxidation potential")
         redox_potential = RedoxPotential(
             neutral_molecule=self.neutral_molecule,
             charged_molecule=self.charged_molecule,
@@ -220,6 +222,7 @@ class RedoxCal(BaseModel):
 
         """
         # * calculate the oxidation state energies (in eV)
+        logging.info("Calculating reduction potential")
         redox_potential = RedoxPotential(
             neutral_molecule=self.neutral_molecule,
             charged_molecule=self.charged_molecule,

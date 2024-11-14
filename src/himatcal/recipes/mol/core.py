@@ -47,7 +47,6 @@ def get_molecular_structure(
     except Exception as e:
         return f"Unexpected error: {e}"
 
-    # TODO: relax atoms using CREST and update the function on MCS
 
 
 def consumeApi(urlPath):
