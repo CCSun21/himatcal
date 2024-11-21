@@ -1,4 +1,15 @@
-"""https://github.com/jla-gardner/locache/blob/master/locache.py"""
+"""
+https://github.com/jla-gardner/locache/blob/master/locache.py
+
+Usage:
+>>> from locache import persist
+
+>>> @persist
+... def my_func(x, num=3):
+...     print("Hi from foo!")
+...     return x * num
+
+"""
 
 from __future__ import annotations
 
@@ -92,11 +103,11 @@ def persist(
             # particular function call
             source_code = inspect.getsource(f)
             dump = pickle.dumps((source_code, args, kwargs))
-            hash = sha256(dump).hexdigest()[:32]
+            hashed_fn = sha256(dump).hexdigest()[:32]
 
             # we save the result of this function call to a file
             # with this unique identifier as the filename
-            file_path = location / f"{hash}.pkl"
+            file_path = location / f"{hashed_fn}.pkl"
 
             if file_path.exists():
                 _logger.debug(f"cache hit for {f.__name__} with {args}, {kwargs}")
