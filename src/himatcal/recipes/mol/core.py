@@ -126,6 +126,8 @@ def cas2xyz(CAS_ID, relax_atoms=True):
         return file.read()
 
 
+# TODO: include PubGrep ( https://github.com/grimme-lab/PubGrep )
+
 # TODO: Methods or flow to relax the mols
 
 

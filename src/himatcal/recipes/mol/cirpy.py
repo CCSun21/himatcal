@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 CIRpy
 
@@ -6,30 +5,16 @@ Python interface for the Chemical Identifier Resolver (CIR) by the CADD Group at
 https://github.com/mcs07/CIRpy
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
+from __future__ import annotations
+
 import functools
 import inspect
 import logging
 import os
+from urllib.parse import quote, urlencode
+from urllib.request import urlopen
 
-try:
-    from urllib.error import HTTPError
-    from urllib.parse import quote, urlencode
-    from urllib.request import urlopen
-except ImportError:
-    from urllib import urlencode
-    from urllib2 import quote, urlopen, HTTPError
-
-try:
-    from lxml import etree
-except ImportError:
-    try:
-        import xml.etree.cElementTree as etree
-    except ImportError:
-        import xml.etree.ElementTree as etree
-
+from lxml import etree
 
 __author__ = "Matt Swain"
 __email__ = "m.swain@me.com"
@@ -125,7 +110,7 @@ def request(
     return etree.parse(response).getroot()
 
 
-class Result(object):
+class Result:
     """A single result returned by CIR."""
 
     def __init__(self, input, notation, input_format, resolver, representation, value):
@@ -286,10 +271,14 @@ def resolve_image(
 
     """
     # Aggregate all arguments into kwargs
-    args, _, _, values = inspect.getargvalues(inspect.currentframe())
-    for arg in args:
-        if values[arg] is not None:
-            kwargs[arg] = values[arg]
+    frame = inspect.currentframe()
+    if frame:
+        args, _, _, values = inspect.getargvalues(frame)
+        for arg in args:
+            if values[arg] is not None:
+                kwargs[arg] = values[arg]
+    else:
+        print("Could not get the current frame. Performing alternative action...")
     # Turn off anti-aliasing for transparent background
     if kwargs.get("bgcolor") == "transparent":
         kwargs["antialiasing"] = False
@@ -344,7 +333,7 @@ def download(
         return
     # Only overwrite an existing file if explicitly instructed to.
     if not overwrite and os.path.isfile(filename):
-        raise IOError(
+        raise OSError(
             "%s already exists. Use 'overwrite=True' to overwrite it." % filename
         )
     # Ensure file ends with a newline
@@ -356,7 +345,7 @@ def download(
 
 def memoized_property(fget):
     """Decorator to create memoized properties."""
-    attr_name = "_{0}".format(fget.__name__)
+    attr_name = f"_{fget.__name__}"
 
     @functools.wraps(fget)
     def fget_memoized(self):
@@ -367,7 +356,7 @@ def memoized_property(fget):
     return property(fget_memoized)
 
 
-class Molecule(object):
+class Molecule:
     """Class to hold and cache the structure information for a given CIR input."""
 
     def __init__(self, input, resolvers=None, get3d=False, **kwargs):

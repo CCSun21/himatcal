@@ -66,7 +66,7 @@ def xyz_to_mol(xyz_file: Path, write_mol=True):
     mol = next(pb.readfile("xyz", xyz_file))
     if write_mol:
         mol.write("mol", f"{xyz_file}.mol", overwrite=True)
-        return Path.open(f"{xyz_file}.mol").read()
+        return Path(f"{xyz_file}.mol").open().read()
     return None
 
 

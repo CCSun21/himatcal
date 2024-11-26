@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-import logging
 import random
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 
 
 def random_logo():
@@ -86,6 +81,3 @@ def random_logo():
 """,
     ]
     return random.choice(logo_list)
-
-
-logging.info(random_logo())

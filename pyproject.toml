@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "himatcal"
 description = "High throughput material calculation"
-version = "0.1.6"
+version = "0.1.7"
 readme = "README.md"
 license = { text = "BSD-3" }
 authors = [{name = "Congcong Sun", email = "suncongcong000@foxmail.com"},]
@@ -13,10 +13,10 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
     "Operating System :: Microsoft :: Windows",
@@ -64,6 +64,7 @@ himatcal = ["py.typed"]
 
 [project.scripts]
 himatcal = "himatcal._cli.cli:app"
+pubgrep = "himatcal.recipes.mol.pubgrep:cli"
 
 [tool.pyright]
 include = ["himatcal"]
