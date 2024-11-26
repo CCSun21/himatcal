@@ -7,6 +7,60 @@ import os
 import re
 from pathlib import Path
 
+from pydantic import BaseModel, field_validator
+
+
+class MoleculeInfo(BaseModel):
+    """Represents information about a molecule, including its label, charge, and multiplicity.
+
+    This class provides methods to parse charge values and to create an instance from a filename that follows a specific naming convention.
+    """
+
+    label: str
+    charge: int
+    mult: int
+
+    @field_validator("charge", mode="before")
+    def parse_charge(cls, value):
+        """Parses the charge value from a string format.
+
+        Args:
+            value (str): The charge value as a string, which may start with 'n' to indicate a negative charge.
+
+        Returns:
+            int: The parsed charge as an integer.
+        """
+        value = str(value)
+        return -int(value[1:]) if value.startswith("n") else int(value)
+
+    @classmethod
+    def from_filename(cls, filename: str):
+        """Creates a MoleculeInfo instance from a filename.
+
+        The filename must match the pattern '<label>_c<charge><mult>', where <charge> can be prefixed with 'n' for negative charges.
+
+        Args:
+            filename (str): The filename from which to extract molecule information.
+
+        Returns:
+            MoleculeInfo: An instance of MoleculeInfo with the extracted label, charge, and multiplicity.
+
+        Raises:
+            ValueError: If the filename does not match the expected format.
+        """
+        pattern = r"(.*?)-c(n?\d)s(\d+)"
+        if not (match := re.match(pattern, filename)):
+            raise ValueError(f"Filename {filename} does not match the expected format")
+        label, chg, mult = match.groups()
+        return cls(label=label, charge=chg, mult=int(mult))
+
+    def write_filename(self):
+        return (
+            f"{self.label}-cn{-self.charge}s{self.mult}"
+            if self.charge < 0
+            else f"{self.label}-c{self.charge}s{self.mult}"
+        )
+
 
 def labeled_dir(main_workdir: Path, label: str):
     """
@@ -33,32 +87,18 @@ def labeled_dir(main_workdir: Path, label: str):
     return folder_path
 
 
-def get_chg_mult(molname):
+def get_chg_mult(molname: str):
     """
     Get the label, charge, and multiplicity from the name of a molecule.
-
-    Args:
-        molname (str): The name of the molecule in the format {label}-c{charge}s{multiplicity}.
-
-    Returns:
-        tuple: A tuple containing the label (str), charge (int), and multiplicity (int) of the molecule.
-               If the name does not match the expected format, returns (None, None, None).
+    Deprecated: Method moved to MoleculeInfo(BaseModel)
     """
-    import re
-
-    pattern = r"(.*?)-c(n?\d)s(\d+)"
-    if not (match := re.match(pattern, molname)):
-        return None, None, None
-    label, chg, mult = match.groups()
-    chg = f"-{chg[1:]}" if chg.startswith("n") else chg
-    return label, int(chg), int(mult)
+    mol_info = MoleculeInfo.from_filename(molname)
+    return mol_info.label, mol_info.charge, mol_info.mult
 
 
 def write_chg_mult_label(label, chg, mult):
     """Write the label, chg and mult to a string, format: {label}-c{charge}s{mult}"""
-    if chg < 0:
-        chg = f"n{abs(chg)}"
-    return f"{label}-c{chg}s{mult}"
+    return MoleculeInfo(label=label, charge=chg, mult=mult).write_filename()
 
 
 def extract_fchk(label, dzip=False):
@@ -146,7 +186,7 @@ def get_homo_lumo(log_path):
     }
 
 
-def cclib_result(log_path:Path):
+def cclib_result(log_path: Path):
     """Extracts and reads computational chemistry log files.
 
     This function checks for compressed log files in the specified directory, decompresses the first found file, and reads the contents using the cclib library. It returns the parsed data from the log file.
