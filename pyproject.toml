@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "himatcal"
@@ -62,6 +62,8 @@ changelog = "https://github.com/CCSun21/himatcal/blob/main/CHANGELOG.md"
 [tool.setuptools.package-data]
 himatcal = ["py.typed"]
 
+
+[tool.hatch]
 [project.scripts]
 himatcal = "himatcal._cli.cli:app"
 pubgrep = "himatcal.recipes.mol.pubgrep:cli"

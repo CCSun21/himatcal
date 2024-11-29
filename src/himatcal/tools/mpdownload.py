@@ -10,7 +10,7 @@ mpr = MPRester(api_key=SETTINGS.MAPI_KEY)
 
 
 def get_mp_formula(formula):
-    structure = mpr.materials.summary.search(
+    return mpr.materials.summary.search(
         formula=formula,
         fields=[
             "material_id",
@@ -21,11 +21,10 @@ def get_mp_formula(formula):
             "band_gap",
         ],
     )
-    return structure
 
 
 def get_mp_id(material_id):
-    structure = mpr.materials.summary.search(
+    return mpr.materials.summary.search(
         material_ids=[material_id],
         fields=[
             "material_id",
@@ -36,13 +35,12 @@ def get_mp_id(material_id):
             "band_gap",
         ],
     )
-    return structure
 
 
 def get_mp_chemsys(chemsys):
     # chemsys = 'Li-Fe-O'
     elements = chemsys.split("-")
-    structure = mpr.materials.summary.search(
+    return mpr.materials.summary.search(
         elements=elements,
         fields=[
             "material_id",
@@ -53,7 +51,6 @@ def get_mp_chemsys(chemsys):
             "band_gap",
         ],
     )
-    return structure
 
 
 def extract_mp_prop(MPdoc):

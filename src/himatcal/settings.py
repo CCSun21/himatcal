@@ -76,8 +76,12 @@ class HimatcalSettings(BaseSettings):
     # ---------------------------
     # external key file
     # ---------------------------
-    SGHPC1_KEY_PATH: Path = Field("", description=("Path to the ssh key file of sghpc1"))
-    YEESUAN_KEY_PATH: Path = Field("", description=("Path to the ssh key file of yeesuan"))
+    SGHPC1_KEY_PATH: Path = Field(
+        "", description=("Path to the ssh key file of sghpc1")
+    )
+    YEESUAN_KEY_PATH: Path = Field(
+        "", description=("Path to the ssh key file of yeesuan")
+    )
     XMU_KEY_PATH: Path = Field("", description=("Path to the ssh key file of XMU"))
 
     # ---------------------------
@@ -96,8 +100,8 @@ class HimatcalSettings(BaseSettings):
     # ---------------------------
     # logging
     # ---------------------------
-    DEBUG: bool = Field(
-        False, description=("Whether to enable debug logging"))
+    DEBUG: bool = Field(False, description=("Whether to enable debug logging"))
+
 
 def _use_custom_config_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Use custom settings from the config file"""

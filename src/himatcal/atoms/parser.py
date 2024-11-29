@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -20,6 +19,7 @@ def mol2xyz(mol, comment=None):
         xyz += "{}     {:14.9f}    {:14.9f}    {:14.9f}\n".format(a, *c)
 
     return xyz
+
 
 def xyz2mol(xyz, smiles):
     """

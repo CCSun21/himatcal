@@ -33,7 +33,7 @@ def rdkit2ase(mol) -> Atoms:
     )
 
 
-def ase2rdkit(atoms: Atoms, charge:int=0) -> Chem.Mol:
+def ase2rdkit(atoms: Atoms, charge: int = 0) -> Chem.Mol:
     """Convert an ASE Atoms object to an RDKit molecule."""
     with io.StringIO() as f:
         write(f, atoms, format="xyz")
@@ -225,6 +225,7 @@ def plot_gasteiger_charges(mol):
     SimilarityMaps.GetSimilarityMapFromWeights(
         mol, contribs, colorMap="jet", contourLines=10
     )
+
 
 def smiles_to_rdkit(smi, gen_3d=True, nconf=100):
     """

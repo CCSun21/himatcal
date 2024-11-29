@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-__doc__ = """
+"""
 Calculate Root-mean-square deviation (RMSD) between structure A and B, in XYZ
 or PDB format, using transformation and rotation.
 
@@ -7,16 +6,17 @@ For more information, usage, example and citation read more at
 https://github.com/charnley/rmsd
 """
 
-__version__ = "1.5.1"
+from __future__ import annotations
 
 import argparse
 import copy
 import gzip
 import re
 import sys
+from collections.abc import Iterator
 from functools import partial
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Protocol, Set, Tuple, Union
+from typing import Any, List, Optional, Protocol, Set, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
@@ -31,6 +31,7 @@ try:
 except ImportError:
     qmllib = None
 
+__version__ = "1.5.1"
 
 METHOD_KABSCH = "kabsch"
 METHOD_QUATERNION = "quaternion"
@@ -1412,7 +1413,7 @@ def set_coordinates(
     """
     N, D = V.shape
 
-    if N != len(atoms):
+    if len(atoms) != N:
         raise ValueError("Mismatch between expected atoms and coordinate size")
 
     fmt = "{:<2}" + (" {:15." + str(decimals) + "f}") * 3
@@ -1453,7 +1454,7 @@ def get_coordinates(
         get_func = get_coordinates_pdb
 
     else:
-        raise ValueError("Could not recognize file format: {:s}".format(fmt))
+        raise ValueError(f"Could not recognize file format: {fmt:s}")
 
     val = get_func(filename, is_gzip=is_gzip, return_atoms_as_int=return_atoms_as_int)
 
@@ -1553,12 +1554,12 @@ def _parse_pdb_atom_line(line: str) -> Optional[str]:
     if len(atom) == 2 and atom[0] == "H":
         atom = "H"
 
-    if atom in NAMES_ELEMENT.keys():
+    if atom in NAMES_ELEMENT:
         return atom
 
     tokens = line.split()
     atom = tokens[2][0]
-    if atom in NAMES_ELEMENT.keys():
+    if atom in NAMES_ELEMENT:
         return atom
 
     # e.g. 1HD1
@@ -2087,7 +2088,7 @@ def main(args: Optional[List[str]] = None) -> str:
     p_size = p_coord.shape[0]
     q_size = q_coord.shape[0]
 
-    if not p_size == q_size:
+    if p_size != q_size:
         print("error: Structures not same size")
         sys.exit()
 

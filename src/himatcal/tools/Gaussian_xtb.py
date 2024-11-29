@@ -3,11 +3,12 @@
 """
 Gaussian external xtb script, From ADCR Program.
 
-Usage: 
+Usage:
 add the following line to the Gaussian input file:
 external='Gaussian_xtb.py'
 
 """
+
 import os
 import sys
 
