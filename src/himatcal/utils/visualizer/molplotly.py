@@ -3,24 +3,25 @@
 from __future__ import annotations
 
 import base64
-import textwrap
-from io import BytesIO
-from typing import Callable
 import itertools
 import re
+import textwrap
+from io import BytesIO
+from typing import TYPE_CHECKING, Callable
 
-import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 from dash import Input, Output, dcc, html, no_update
 from jupyter_dash import JupyterDash
-from pandas.core.groupby import DataFrameGroupBy
-from plotly.graph_objects import Figure
-import plotly.graph_objects as go
-
 from rdkit import Chem
-from rdkit.Chem.rdChemReactions import ReactionFromSmarts
-from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem.rdchem import Mol
+from rdkit.Chem.rdChemReactions import ReactionFromSmarts
+
+if TYPE_CHECKING:
+    import pandas as pd
+    from pandas.core.groupby import DataFrameGroupBy
+    from plotly.graph_objects import Figure
 
 
 def str2bool(v: str) -> bool:
@@ -383,7 +384,7 @@ def add_molecules(
                     img = Chem.Draw.MolToImage(smiles)
                     img.save(buffered, format="PNG")
                     img_str = base64.b64encode(buffered.getvalue())
-                    img_str = "data:image/png;base64,{}".format(repr(img_str)[2:-1])
+                    img_str = f"data:image/png;base64,{repr(img_str)[2:-1]}"
 
                 else:
                     raise TypeError(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.request
 from io import StringIO
 from pathlib import Path
@@ -9,6 +10,7 @@ from typing import TYPE_CHECKING
 import requests
 from ase.io import write
 from chemspipy import ChemSpider
+from pydantic import BaseModel, field_validator
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -17,6 +19,8 @@ from himatcal.recipes.crest.core import relax as crest_relax
 from himatcal.utils.rdkit.core import rdkit2ase
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     from ase import Atoms
 
 
@@ -155,3 +159,52 @@ def relax_mol(mol: Atoms, chg: int = 0, mult: int = 1, method: str = "crest", **
         return crest_relax(mol, chg=chg, mult=mult, **kwargs)
     else:
         raise ValueError(f"Relaxation method '{method}' is not supported")
+
+
+class CASNumber(BaseModel):
+    cas_number: str
+
+    @field_validator("cas_number")
+    def validate_cas_number(cls, value):
+        pattern = re.compile(r"^\d{2,6}-\d{2}-\d{1}$")
+        if not re.match(pattern, value):
+            raise ValueError(
+                "Invalid CAS number format. It should be 2-6 digits followed by a hyphen, then 2 digits, and another hyphen followed by 1 digit."
+            )
+        return value
+
+
+def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"):
+    """
+    convert cas to smiles using nci api
+    """
+    # * validize the cas_number
+    cas_number = CASNumber(cas_number=cas_number).cas_number
+
+    if source == "cirpy":
+        url = f"https://cactus.nci.nih.gov/chemical/structure/{cas_number}/smiles"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            smiles = response.text.strip()
+            return smiles or None
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching data for CAS {cas_number}: {e}")
+            return None
+    elif source == "pubchem":
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/property/IsomericSMILES/JSON"
+
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            return data["PropertyTable"]["Properties"][0]["IsomericSMILES"]
+        except requests.exceptions.RequestException as e:
+            return f"Error fetching data: {e}"
+        except (KeyError, IndexError):
+            return "CAS number not found or SMILES not available"
+    else:
+        return None
