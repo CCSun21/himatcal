@@ -39,7 +39,7 @@ def ase2rdkit(atoms: Atoms, charge: int = 0) -> Chem.Mol:
         write(f, atoms, format="xyz")
         f.seek(0)
         xyz = f.read()
-        raw_mol = Chem.MolFromXYZBlock(xyz)
+        raw_mol = Chem.rdmolfiles.MolFromXYZBlock(xyz)
 
     mol = Chem.Mol(raw_mol)
     rdDetermineBonds.DetermineBonds(mol, charge=charge)

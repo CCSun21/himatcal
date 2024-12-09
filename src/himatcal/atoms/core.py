@@ -248,3 +248,39 @@ def add_cell(atoms, cell_parameters):
 
     atoms.set_cell(cell_parameters)
     return atoms
+
+
+def write2tempxyz(content, mode="wb+", format=".xyz"):
+    """
+    Write the content to a temporary file in the tmp folder and return the path.
+    """
+    import tempfile
+
+    tempfile_path = tempfile.mktemp(suffix=format)
+    # print(tempfile_path)
+    with open(tempfile_path, mode) as f:
+        f.write(content)
+    return tempfile_path
+
+
+def unit_converter(file_content):
+    """
+    convert the unit from bohr to angstrom
+    """
+    from ase.io import read
+    import tempfile
+
+    bohr_to_angstrom = 0.529177
+    try:
+        tempfile_path = write2tempxyz(file_content)
+    except Exception as e:
+        tempfile_path = write2tempxyz(file_content, mode="w+")
+    atoms_bohr = read(tempfile_path)
+    atoms_angstrom = atoms_bohr.copy()
+    positions_bohr = atoms_bohr.get_positions()
+    positions_angstrom = positions_bohr * bohr_to_angstrom
+    atoms_angstrom.set_positions(positions_angstrom)
+    temp_angstrom_atoms_path = tempfile.mktemp(suffix=".xyz")
+    atoms_angstrom.write(temp_angstrom_atoms_path)
+    # print(temp_angstrom_atoms_path)
+    return temp_angstrom_atoms_path
