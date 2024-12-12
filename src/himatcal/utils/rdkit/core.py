@@ -264,3 +264,16 @@ def smiles_to_rdkit(smi, gen_3d=True, nconf=100):
         mol = new_mol
 
     return mol
+
+
+def merge_equivalent_smiles(smiles_list):
+    from rdkit.Chem import rdMolHash
+
+    unique_mols = {}
+    for smile in smiles_list:
+        mol = Chem.MolFromSmiles(smile)
+        mol_hash = rdMolHash.MolHash(mol, rdMolHash.HashFunction.CanonicalSmiles)
+        if mol_hash in unique_mols:
+            continue
+        unique_mols[mol_hash] = smile
+    return list(unique_mols.values())

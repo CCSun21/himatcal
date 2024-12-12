@@ -87,7 +87,6 @@ class calc_free_energy:
             "basis": "6-311+g(d) em=GD3BJ",
             "scrf": "pcm, solvent=acetone",
             "label": f"{self.label}",
-            "freq": "",
         }
         if self.solvent:
             calc_params["scrf"] = f"pcm, solvent={self.solvent}"

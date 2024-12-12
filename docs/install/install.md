@@ -13,3 +13,11 @@ pip install uv
 uv pip install himatcal
 uv pip install git+https://gitlab.com/ase/ase.git
 ```
+
+
+
+### optional dependencies
+
+```sh
+uv install git+https://github.com/Quantum-Accelerators/xtb_ase.git
+```
