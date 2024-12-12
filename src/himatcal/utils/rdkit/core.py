@@ -46,6 +46,12 @@ def ase2rdkit(atoms: Atoms, charge: int = 0) -> Chem.Mol:
     return mol
 
 
+def atoms2smiles(atoms: Atoms) -> str:
+    """Convert an ASE Atoms object to a SMILES string."""
+    mol = ase2rdkit(atoms)
+    return Chem.MolToSmiles(mol)
+
+
 def smiles2atoms(smiles: str) -> Atoms:
     """
     Convert a SMILES string to an ASE Atoms object.

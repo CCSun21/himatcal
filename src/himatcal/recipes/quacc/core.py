@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from quacc import job
@@ -24,6 +22,26 @@ def relax_job(
     opt_params: OptParams | None = None,
     additional_fields: dict[str, Any] | None = None,
 ) -> OptSchema:
+    """Perform a relaxation job on a given set of atoms using a specified calculator.
+
+    This function executes an optimization process to relax the atomic structure,
+    optionally allowing for cell relaxation. It merges default optimization parameters
+    with any user-provided parameters and returns the results of the optimization.
+
+    Args:
+        atoms (Atoms): The atomic structure to be relaxed.
+        calc: The calculator to be used for the relaxation process.
+        relax_cell (bool, optional): Whether to relax the cell dimensions. Defaults to False.
+        opt_params (OptParams | None, optional): Additional optimization parameters. Defaults to None.
+        additional_fields (dict[str, Any] | None, optional): Extra fields to include in the results. Defaults to None.
+
+    Returns:
+        OptSchema: The results of the relaxation job, encapsulated in an optimization schema.
+
+    Examples:
+        result = relax_job(atoms, calculator, relax_cell=True, opt_params={"fmax": 0.01})
+    """
+
     opt_defaults = {"fmax": 0.05, "max_steps": 1000}
 
     # Ensure opt_params is converted to a dictionary if it's not already
@@ -38,8 +56,3 @@ def relax_job(
     return Summarize(
         additional_fields={"name": "MLP Relax"} | (additional_fields or {})
     ).opt(dyn)
-
-
-def load_quacc_result(file_path: str) -> dict:
-    with Path.open(Path(file_path)) as file:
-        return json.load(file)
