@@ -83,16 +83,24 @@ class MolGraph(BaseModel):
         return cls(**MontyDecoder().process_decoded(data))
 
     @classmethod
-    def from_file(cls, filename):
+    def from_file(cls, filename, smiles=None):
         from monty.serialization import loadfn
 
         data = loadfn(filename)
-        return cls.from_json(data)
+        if not smiles:
+            return cls.from_json(data)
+        try:
+            moldata = next(item for item in data if item["smiles"] == smiles)
+            return cls.from_json(moldata)
+        except StopIteration as e:
+            raise ValueError(
+                f"No molecule with smiles '{smiles}' found in the file."
+            ) from e
 
 
 class Reaction(BaseModel):
-    reactant: MolGraph
-    product: MolGraph
+    reactant: MolGraph | list[MolGraph]
+    product: MolGraph | list[MolGraph]
     ts: MolGraph | None = None
 
     productfile: str | None = None
@@ -106,14 +114,38 @@ class Reaction(BaseModel):
     _enthalpy: float | None = None
 
     @property
+    def reactant_energy(self):
+        if not isinstance(self.reactant, list):
+            return self.reactant.energy
+        energies = []
+        for mol in self.reactant:
+            if mol.energy is None:
+                logging.warning(f"Reactant molecule {mol.label} has no energy.")
+            else:
+                energies.append(mol.energy)
+        return sum(energies)
+
+    @property
+    def product_energy(self):
+        if not isinstance(self.product, list):
+            return self.product.energy
+        energies = []
+        for mol in self.product:
+            if mol.energy is None:
+                logging.warning(f"Product molecule {mol.label} has no energy.")
+            else:
+                energies.append(mol.energy)
+        return sum(energies)
+
+    @property
     def barrier(self):
         if self._barrier is None:
             if self.ts is None:
                 return None
             else:
                 self._barrier = (
-                    self.ts.energy - self.reactant.energy
-                    if self.ts.energy is not None and self.reactant.energy is not None
+                    self.ts.energy - self.reactant_energy
+                    if self.ts.energy is not None and self.reactant_energy is not None
                     else None
                 )
         return self._barrier
@@ -121,8 +153,8 @@ class Reaction(BaseModel):
     @property
     def enthalpy(self):
         if self._enthalpy is None:
-            if self.product.energy is not None and self.reactant.energy is not None:
-                self._enthalpy = self.product.energy - self.reactant.energy
+            if self.product_energy is not None and self.reactant_energy is not None:
+                self._enthalpy = self.product_energy - self.reactant_energy
             else:
                 self._enthalpy = None
         return self._enthalpy

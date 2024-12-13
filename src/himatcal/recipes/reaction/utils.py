@@ -9,6 +9,9 @@ if TYPE_CHECKING:
 
 
 def update_molgraph(molgraph: MolGraph, filename: str = "molgraph.json"):
+    """
+    update the molgraph in the JSON file
+    """
     with open(filename) as json_file:
         content = json_file.read()
         molgraph_list = [] if content == "" else json.loads(content)
@@ -43,13 +46,16 @@ def get_charge_and_spin(smiles):
     return charge, spin_multiplicity
 
 
-def relax_molgraph(molgraph: MolGraph):
+def relax_molgraph(molgraph: MolGraph, charge: int | None, mult: int | None):
     from quacc.recipes.orca.core import relax_job
+
+    if charge is None or mult is None:
+        charge, mult = get_charge_and_spin(molgraph.smiles)
 
     result = relax_job(
         atoms=molgraph.atoms,
-        charge=get_charge_and_spin(molgraph.smiles)[0],
-        spin_multiplicity=get_charge_and_spin(molgraph.smiles)[1],
+        charge=charge,
+        spin_multiplicity=mult,
         xc="b97-3c",
         basis="def2-tzvp",
     )
@@ -63,13 +69,16 @@ def relax_molgraph(molgraph: MolGraph):
     return molgraph
 
 
-def molgraph_spe(molgraph: MolGraph):
+def molgraph_spe(molgraph: MolGraph, charge: int | None, mult: int | None):
     from himatcal.recipes.gaussian.flow import calc_free_energy
+
+    if charge is None or mult is None:
+        charge, mult = get_charge_and_spin(molgraph.smiles)
 
     freeE = calc_free_energy(
         atoms=molgraph.atoms,
-        charge=get_charge_and_spin(molgraph.smiles)[0],
-        mult=get_charge_and_spin(molgraph.smiles)[1],
+        charge=charge,
+        mult=mult,
         label="molgraph",
         relax=False,
     )

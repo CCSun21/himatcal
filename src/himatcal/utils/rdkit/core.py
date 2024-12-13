@@ -277,3 +277,18 @@ def merge_equivalent_smiles(smiles_list):
             continue
         unique_mols[mol_hash] = smile
     return list(unique_mols.values())
+
+
+def mol_with_atom_and_bond_indices(smiles):
+    from rdkit import Chem
+    from rdkit.Chem import Draw
+    from rdkit.Chem.Draw import IPythonConsole
+
+    mol = Chem.MolFromSmiles(smiles)
+    for atom in mol.GetAtoms():
+        atom.SetAtomMapNum(
+            atom.GetIdx() + 1
+        )  # Add 1 to the atom index to display all atom numbers
+    IPythonConsole.drawOptions.addBondIndices = True
+    IPythonConsole.molSize = 350, 300
+    return mol
