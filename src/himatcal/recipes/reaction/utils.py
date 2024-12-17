@@ -46,7 +46,7 @@ def get_charge_and_spin(smiles):
     return charge, spin_multiplicity
 
 
-def relax_molgraph(molgraph: MolGraph, charge: int | None, mult: int | None):
+def molgraph_relax(molgraph: MolGraph, charge: int | None, mult: int | None):
     from quacc.recipes.orca.core import relax_job
 
     if charge is None or mult is None:

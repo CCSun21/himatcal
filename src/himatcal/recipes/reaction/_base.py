@@ -103,16 +103,6 @@ class Reaction(BaseModel):
     product: MolGraph | list[MolGraph]
     ts: MolGraph | None = None
 
-    productfile: str | None = None
-    reactantfile: str | None = None
-    tsfile: str | None = None
-
-    reactant_smiles: str | None = None
-    product_smiles: str | None = None
-
-    _barrier: float | None = None
-    _enthalpy: float | None = None
-
     @property
     def reactant_energy(self):
         if not isinstance(self.reactant, list):
@@ -139,39 +129,57 @@ class Reaction(BaseModel):
 
     @property
     def barrier(self):
-        if self._barrier is None:
-            if self.ts is None:
-                return None
-            else:
-                self._barrier = (
-                    self.ts.energy - self.reactant_energy
-                    if self.ts.energy is not None and self.reactant_energy is not None
-                    else None
-                )
-        return self._barrier
+        if self.ts is None:
+            return None
+        else:
+            return (
+                self.ts.energy - self.reactant_energy
+                if self.ts.energy is not None and self.reactant_energy is not None
+                else None
+            )
 
     @property
     def enthalpy(self):
-        if self._enthalpy is None:
-            if self.product_energy is not None and self.reactant_energy is not None:
-                self._enthalpy = self.product_energy - self.reactant_energy
-            else:
-                self._enthalpy = None
-        return self._enthalpy
+        if self.product_energy is not None and self.reactant_energy is not None:
+            return self.product_energy - self.reactant_energy
+        else:
+            return None
 
     def reverse(self):
         return Reaction(reactant=self.product, product=self.reactant, ts=self.ts)
 
+    @property
+    def reactant_smiles(self):
+        if not isinstance(self.reactant, list):
+            return self.reactant.smiles
+        smiles = []
+        for mol in self.reactant:
+            if mol.smiles is None:
+                logging.warning(f"Reactant molecule {mol.label} has no smiles.")
+            else:
+                smiles.append(mol.smiles)
+        return ".".join(smiles)
+
+    @property
+    def product_smiles(self):
+        if not isinstance(self.product, list):
+            return self.product.smiles
+        smiles = []
+        for mol in self.product:
+            if mol.smiles is None:
+                logging.warning(f"Product molecule {mol.label} has no smiles.")
+            else:
+                smiles.append(mol.smiles)
+        return ".".join(smiles)
+
+    @property
     def reaction_results(self):
-        if self.reactant_smiles and self.product_smiles:
-            return ReactionResults(
-                rsmi=self.reactant_smiles,
-                psmi=self.product_smiles,
-                ea=self.barrier,
-                dh=self.enthalpy,
-            )
-        else:
-            return None
+        return ReactionResults(
+            rsmi=self.reactant_smiles or "",
+            psmi=self.product_smiles or "",
+            ea=self.barrier,
+            dh=self.enthalpy,
+        )
 
 
 class ReactionResults(BaseModel):
