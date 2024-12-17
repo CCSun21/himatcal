@@ -33,7 +33,7 @@ def rdkit2ase(mol) -> Atoms:
     )
 
 
-def ase2rdkit(atoms: Atoms, charge: int = 0) -> Chem.Mol:
+def ase2rdkit(atoms: Atoms, charge: int | None = None) -> Chem.Mol:
     """Convert an ASE Atoms object to an RDKit molecule."""
     with io.StringIO() as f:
         write(f, atoms, format="xyz")
@@ -42,7 +42,16 @@ def ase2rdkit(atoms: Atoms, charge: int = 0) -> Chem.Mol:
         raw_mol = Chem.rdmolfiles.MolFromXYZBlock(xyz)
 
     mol = Chem.Mol(raw_mol)
-    rdDetermineBonds.DetermineBonds(mol, charge=charge)
+    # * Using a range of charges to determine the correct one, a lazy way to avoid errors
+    if charge is None:
+        for chg in [-2, -1, 0, 1, 2]:
+            try:
+                rdDetermineBonds.DetermineBonds(mol, charge=chg)
+                break
+            except ValueError:
+                continue
+    else:
+        rdDetermineBonds.DetermineBonds(mol, charge=charge)
     return mol
 
 
