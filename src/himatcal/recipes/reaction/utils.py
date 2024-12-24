@@ -46,19 +46,31 @@ def get_charge_and_spin(smiles):
     return charge, spin_multiplicity
 
 
-def molgraph_relax(molgraph: MolGraph, charge: int | None, mult: int | None):
-    from quacc.recipes.orca.core import relax_job
+def molgraph_relax(molgraph: MolGraph, charge: int | None, mult: int | None, method: str="orca"):
 
     if charge is None or mult is None:
         charge, mult = get_charge_and_spin(molgraph.smiles)
-
-    result = relax_job(
-        atoms=molgraph.atoms,
-        charge=charge,
-        spin_multiplicity=mult,
-        xc="b97-3c",
-        basis="def2-tzvp",
-    )
+    if method == "orca":
+        from quacc.recipes.orca.core import relax_job
+        result = relax_job(
+            atoms=molgraph.atoms,
+            charge=charge,
+            spin_multiplicity=mult,
+            xc="b97-3c",
+            basis="def2-tzvp",
+        )
+    elif method == "aimnet2":
+        from himatcal.calculator.aimnet import AIMNet2ASE
+        from himatcal.recipes.quacc.core import relax_job
+        calc = AIMNet2ASE(
+            "aimnet2_b973c",
+            charge=charge,
+            mult=mult,
+        )
+        result = relax_job(
+            atoms=molgraph.atoms,
+            calc=calc,
+        )
     logging.info(f"Relaxation of {molgraph.smiles} is done.")
 
     molgraph.atoms = result["atoms"]

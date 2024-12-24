@@ -30,41 +30,44 @@ if TYPE_CHECKING:
 
 
 class ASE_DE_GSM:
-    def __init__(self,
-                    reactant: Atoms | str | Any = None,
-                    product: Atoms | str | Any = None,
-                    calculator: Calculator | Any = None,
-                    multiplicity: int = 1,
-                    fixed_reactant: bool | Any = False,
-                    fixed_product: bool | Any = False,
-                    coordinate_type: Literal["TRIC", "DLC", "HDLC"] | Any = "TRIC",
-                    optimizer_method: Literal["eigenvector_follow", "lbfgs"] | Any = "eigenvector_follow",
-                    num_of_nodes: int | Any = 11,
-                    line_search: Literal["NoLineSearch", "backtrack"] | Any = "NoLineSearch",
-                    conv_Ediff: float | Any = 100.0,
-                    conv_gmax: float | Any = 100.0,
-                    DMAX: float | Any = 0.1,
-                    ID: int = 0,
-                    r_type: Literal[0, 1, 2] | Any = 1,
-                    max_gsm_iterations: int = 50,
-                    max_opt_steps: int = 3):
-            self.reactant = reactant
-            self.product = product
-            self.calculator = calculator
-            self.multiplicity = multiplicity
-            self.fixed_reactant = fixed_reactant
-            self.fixed_product = fixed_product
-            self.coordinate_type = coordinate_type
-            self.optimizer_method = optimizer_method
-            self.num_of_nodes = num_of_nodes
-            self.line_search = line_search
-            self.conv_Ediff = conv_Ediff
-            self.conv_gmax = conv_gmax
-            self.DMAX = DMAX
-            self.ID = ID
-            self.r_type = r_type
-            self.max_gsm_iterations = max_gsm_iterations
-            self.max_opt_steps = max_opt_steps
+    def __init__(
+        self,
+        reactant: Atoms | str | Any = None,
+        product: Atoms | str | Any = None,
+        calculator: Calculator | Any = None,
+        multiplicity: int = 1,
+        fixed_reactant: bool | Any = False,
+        fixed_product: bool | Any = False,
+        coordinate_type: Literal["TRIC", "DLC", "HDLC"] | Any = "TRIC",
+        optimizer_method: Literal["eigenvector_follow", "lbfgs"]
+        | Any = "eigenvector_follow",
+        num_of_nodes: int | Any = 11,
+        line_search: Literal["NoLineSearch", "backtrack"] | Any = "NoLineSearch",
+        conv_Ediff: float | Any = 100.0,
+        conv_gmax: float | Any = 100.0,
+        DMAX: float | Any = 0.1,
+        ID: int = 0,
+        r_type: Literal[0, 1, 2] | Any = 1,
+        max_gsm_iterations: int = 20,
+        max_opt_steps: int = 3,
+    ):
+        self.reactant = reactant
+        self.product = product
+        self.calculator = calculator
+        self.multiplicity = multiplicity
+        self.fixed_reactant = fixed_reactant
+        self.fixed_product = fixed_product
+        self.coordinate_type = coordinate_type
+        self.optimizer_method = optimizer_method
+        self.num_of_nodes = num_of_nodes
+        self.line_search = line_search
+        self.conv_Ediff = conv_Ediff
+        self.conv_gmax = conv_gmax
+        self.DMAX = DMAX
+        self.ID = ID
+        self.r_type = r_type
+        self.max_gsm_iterations = max_gsm_iterations
+        self.max_opt_steps = max_opt_steps
 
     # if reactant or product is str ,read atoms from file
     @field_validator("reactant", "product")
@@ -215,7 +218,7 @@ class ASE_DE_GSM:
             print_level=1,
             mp_cores=1,
             interp_method="DLC",
-            xyz_writer=XYZ_WRITERS["multixyz"]
+            xyz_writer=XYZ_WRITERS["multixyz"],
         )
 
         # * 9. run the GSM
