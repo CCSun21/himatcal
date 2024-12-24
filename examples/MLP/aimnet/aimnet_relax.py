@@ -1,4 +1,6 @@
 """Example of using the relax_job function to relax a structure using the mace-mp-0 recipe."""
+# * ! micromamba activate himatcal
+# * ! pip install torch-cluster==1.6.3
 
 from __future__ import annotations
 
@@ -14,7 +16,9 @@ atoms_path = Path.cwd() / "input.xyz"
 charge = -1
 mult = 1
 
-calc = AIMNet2ASE("aimnet2_b973c", charge=charge, mult=mult)  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
+calc = AIMNet2ASE(
+    "aimnet2_b973c", charge=charge, mult=mult
+)  # * aimnet2/aimnet2_wb97m , aimnet2_b973c, aimnet2-qr
 
 atoms = read(atoms_path)
 result = relax_job(atoms, calc)

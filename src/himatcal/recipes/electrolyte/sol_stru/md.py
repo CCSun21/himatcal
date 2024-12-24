@@ -209,6 +209,7 @@ slurm_title = """#!/bin/bash
 source /usr/local/gromacs/bin/GMXRC.bash
 """
 
+
 def slurm_min(pre_step: str = "init.pdb", current_step: str = "min") -> str:
     return f"""# gromacs minimization
 ## generate the tpr file for gromacs
@@ -292,6 +293,7 @@ def build_box(data, compound_dict, mol_path):
         save_path="init.pdb",
         capital=capital,
     )
+
 
 def gmx_solvation_md(yaml_file, submit_job=False):
     with Path.open(Path(yaml_file)) as f:

@@ -70,4 +70,6 @@ venv.bak/
 .idea/
 
 # test ignores
-try/
+try/# pixi environments
+.pixi
+*.egg-info
