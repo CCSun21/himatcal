@@ -192,7 +192,9 @@ class ReactionResults(BaseModel):
         return f"{self.rsmi}>>{self.psmi}"
 
     def reverse(self):
-        return ReactionResults(rsmi=self.psmi, psmi=self.rsmi, ea=self.ea, dh=self.dh)
+        return ReactionResults(
+            rsmi=self.psmi, psmi=self.rsmi, ea=self.ea - self.dh, dh=-self.dh
+        )
 
     @property
     def rxn_smi(self):

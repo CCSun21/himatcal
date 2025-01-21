@@ -112,9 +112,9 @@ def static_job(
         Dictionary of results
     """
     calc_defaults = {
-        "mem": "16GB",
+        "mem": "64GB",
         "chk": "Gaussian.chk",
-        "nprocshared": psutil.cpu_count(logical=False),
+        "nprocshared": psutil.cpu_count(logical=True),
         "xc": xc,
         "basis": basis,
         "charge": charge,
