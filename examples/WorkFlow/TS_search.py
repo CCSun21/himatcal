@@ -2,13 +2,15 @@
 uvi git+https://gitlab.com/ase/ase.git
 """
 
+from __future__ import annotations
+
 import logging
 import subprocess
 from pathlib import Path
 
 import pandas as pd
 import yaml
-from ase.io import read
+from ase.io import read, write
 from IPython.display import display
 from monty.os import cd
 from pysisyphus.plot import plot_irc
@@ -19,6 +21,7 @@ from rdkit.Chem.Draw import IPythonConsole
 from himatcal.recipes.orca.core import bare_job
 from himatcal.recipes.reaction import MolGraph
 from himatcal.recipes.reaction._base import Reaction
+from himatcal.recipes.reaction.newtonnet import geodesic_ts_hess_irc_newtonnet
 from himatcal.recipes.reaction.utils import (
     molgraph_relax,
     molgraph_spe,
@@ -77,7 +80,10 @@ def get_fragments(mol, bond_idx):
 
     # 获取每个碎片上原子的序号列表
     frag1_atoms = list(frags[0])
-    frag2_atoms = list(frags[1])
+    if len(frags) == 1:
+        frag2_atoms = list(frags[0])
+    else:
+        frag2_atoms = list(frags[1])
 
     return frag1_atoms, frag2_atoms, atom1, atom2
 
@@ -105,7 +111,7 @@ def prepare_molgraph(smiles, charge, mult, bond_break, filename, break_scale):
     logging.info(xyz)
 
     frag1_atoms, frag2_atoms, atom1, atom2 = get_fragments(mol, bond_break[0])
-    bond_break_config = [f"{atom1+1} {atom2+1} B"]
+    bond_break_config = [f"{atom1 + 1} {atom2 + 1} B"]
     with open("autoCG.com", "w") as f:
         f.write(f"{charge} {mult}\n")
         for i, (symbol, coord) in enumerate(zip(symbols, xyz)):
@@ -141,14 +147,14 @@ def prepare_molgraph(smiles, charge, mult, bond_break, filename, break_scale):
 
 
 def optimize_molgraph(molgraph, charge, mult):
-    return molgraph_relax(molgraph, charge=charge, mult=mult)
+    return molgraph_relax(molgraph, charge=charge, mult=mult, method="aimnet2")
 
 
 def run_de_gsm(reactant, product, charge, mult):
-    GS_wd = Path("02.GS")
+    GS_wd = Path("DE-GS")
     GS_wd.mkdir(exist_ok=True)
-    reactant.atoms.write("02.GS/initial.xyz")
-    product.atoms.write("02.GS/final.xyz")
+    reactant.atoms.write(GS_wd / "initial.xyz")
+    product.atoms.write(GS_wd / "final.xyz")
 
     gs_yaml = f"""geom:
  type: dlc
@@ -167,6 +173,7 @@ cos:
 opt:
  type: string
  align: False
+ stop_in_when_full: 5
  max_cycles: 20
 tsopt:
  type: rsirfo
@@ -192,16 +199,26 @@ barriers:
 
     subprocess.run("pysis GS.yaml | tee pysis.log", cwd=GS_wd, shell=True)
 
-    with cd("02.GS"):
+    with cd(GS_wd):
         irc_img = plot_irc()
 
     try:
         ts = MolGraph(atoms=read(GS_wd / "ts_final_geometry.xyz"))
     except FileNotFoundError:
         ts = None
-        logging.warning("No ts_final_geometry.xyz found")
+        logging.warning("No ts_final_geometry.xyz found by DE-GS method")
 
     return ts
+
+
+def run_newtonnet(reactant, product):
+    job1, job2, job3, job4 = geodesic_ts_hess_irc_newtonnet(reactant, product)
+    ts = MolGraph(atoms=job2["atoms"])
+    reactant_irc = MolGraph(atoms=job3["trajectory"][-1])
+    write("ts_irc_forward.xyz", job3["trajectory"])
+    product_irc = MolGraph(atoms=job4["trajectory"][-1])
+    write("ts_irc_reverse.xyz", job4["trajectory"])
+    return reactant_irc, product_irc, ts
 
 
 def save_molgraph(molgraph, filename):
@@ -221,9 +238,9 @@ def load_config(config_file):
 
 
 def main():
+    # * Load config file
     config_file = "config.yaml"
     config = load_config(config_file)
-
     reactant_smi = config["reactant_smi"]
     product_smi = config["product_smi"]
     chg = config["chg"]
@@ -235,28 +252,52 @@ def main():
     molgraph_file = config["molgraph_file"]
     reaction_results_file = config["reaction_results_file"]
 
+    # * Prepare molgraph using autoCG
     reactant, product = prepare_molgraph(
         reactant_smi, chg, mult, bond_break, filename, break_scale
     )
-    reactant = optimize_molgraph(reactant, chg, mult)
-    product = optimize_molgraph(product, chg, mult)
-    ts = run_de_gsm(reactant, product, chg, mult)
 
-    if ts:
-        result = bare_job(
-            atoms=ts.atoms,
-            charge=chg,
-            spin_multiplicity=mult,
-            xc="b97-3c",
-            basis="def2-SVP",
-            orcasimpleinput=["OptTS NumFreq"],
-            orcablocks=["%geom Calc_Hess True NumHess True Recalc_Hess 5 END"],
-        )
-        ts = MolGraph(atoms=result["atoms"])
+    # * write molgraph to file
+    logging.info("Writing reactant and product to file")
+    reactant.atoms.write("reactant.xyz")
+    product.atoms.write("product.xyz")
 
+    # * Optimize reactant and product
+    # reactant = optimize_molgraph(reactant, chg, mult)
+    # product = optimize_molgraph(product, chg, mult)
+
+    # reactant.atoms.write("reactant_opt.xyz")
+    # product.atoms.write("product_opt.xyz")
+    # logging.info("Optimized reactant and product written to file")
+
+    # * Run DE-GSM calculation to find TS
+    # ts = run_de_gsm(reactant, product, chg, mult)
+    reactant, product, ts = run_newtonnet(reactant.atoms, product.atoms)
+    # if ts:
+    #     ts.atoms.write("ts.xyz")
+    #     logging.info("TS found, written to ts.xyz")
+    #     result = bare_job(
+    #         atoms=ts.atoms,
+    #         charge=chg,
+    #         spin_multiplicity=mult,
+    #         xc="b97-3c",
+    #         basis="def2-SVP",
+    #         orcasimpleinput=["OptTS NumFreq"],
+    #         orcablocks=["%geom Calc_Hess True NumHess True Recalc_Hess 5 END"],
+    #     )
+    #     ts = MolGraph(atoms=result["atoms"])
+    #     ts.atoms.write("ts_opt.xyz")
+    #     logging.info("TS relaxed, written to ts_opt.xyz")
+    #     save_molgraph(ts, b97_3c_file)
+    # else:
+    #     logging.info("No TS found by DE-GS method")
+    save_molgraph(ts, b97_3c_file)
     save_molgraph(reactant, b97_3c_file)
     save_molgraph(product, b97_3c_file)
-    save_molgraph(ts, b97_3c_file)
+    reactant.atoms.write("reactant_final.xyz")
+    product.atoms.write("product_final.xyz")
+    ts.atoms.write("ts_final.xyz")
+    logging.info("TS relaxed, written to ts_opt.xyz")
 
     reactant_free_e = calculate_free_energy(reactant, chg, mult, molgraph_file)
     product_free_e = calculate_free_energy(product, chg, mult, molgraph_file)
