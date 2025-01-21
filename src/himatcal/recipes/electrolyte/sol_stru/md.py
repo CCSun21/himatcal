@@ -275,7 +275,7 @@ def gmx_write_topo(compound_dict, itp_folder: str = None) -> None:
         f.write("\n[ molecules ]\n")
         f.write("; Compound        #mols\n")
         for compound in compound_dict:
-            f.write(f'{compound}           {compound_dict[compound]["mol"]}\n')
+            f.write(f"{compound}           {compound_dict[compound]['mol']}\n")
 
 
 def build_box(data, compound_dict, mol_path):

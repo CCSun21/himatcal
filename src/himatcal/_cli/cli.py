@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from ase.io import read
@@ -192,63 +192,6 @@ def relax(
     print(f"Dispatched job with id: {dispatch_id}")
 
 
-@app.command("cancel", help="Cancel a covalent job", no_args_is_help=True)
-def cancel_job(job_id: Annotated[str, typer.Argument(help="Job id to cancel")]):
-    """
-    Cancel a covalent job
-    """
-    import covalent as ct
-
-    ct.cancel(job_id)  # TODO: seems like this is not working
-    print(f"Job with id {job_id} cancelled successfully")
-
-
-@app.command("test_exec")
-@app.command("status", help="Get the status of a covalent job", no_args_is_help=True)
-def job_status(job_id: Annotated[str, typer.Argument(help="Job id to get status")]):
-    """
-    Get the status of a covalent job
-    """
-    import covalent as ct
-
-    result = ct.get_result(job_id)
-    status = result.status
-    print(f"Job with id {job_id} is {status}")
-    return status
-
-
-@app.command("redispatch", help="Redispatch a covalent job", no_args_is_help=True)
-def redispatch_job(
-    job_id: Annotated[str, typer.Argument(help="Job id to redispatch")],
-    reuse: Annotated[bool, typer.Option(help="Reuse the previous job")] = False,
-):
-    """
-    Redispatch a covalent job
-    """
-    import covalent as ct
-
-    redispatch_func = ct.redispatch(
-        job_id,
-        reuse_previous_results=reuse,
-    )
-    redispatch_id = redispatch_func()
-    print(f"Job redispathed to {redispatch_id} (reuse_previous_results={reuse})")
-
-
-@app.command(
-    "extract_result", help="Extract the result of a covalent job", no_args_is_help=True
-)
-def extrcat_result(
-    job_id: Annotated[str, typer.Argument(help="Job id to extract result")],
-):
-    """
-    Extract the result of a covalent job
-    """
-    from himatcal.utils.ct import extract_result
-
-    return extract_result(job_id)
-
-
 @app.command(
     "cas", help="Get molecular structure from CAS number", no_args_is_help=True
 )
@@ -263,8 +206,11 @@ def cas(
 
     get_molecular_structure(molecular_cas=cas, write_mol=write)
 
+
 @app.command(
-    "cas2xyz", help="Get molecular structure from CAS number and convert to xyz file", no_args_is_help=True
+    "cas2xyz",
+    help="Get molecular structure from CAS number and convert to xyz file",
+    no_args_is_help=True,
 )
 def cas2xyz(
     cas: Annotated[str, typer.Argument(help="CAS number")],
@@ -277,28 +223,44 @@ def cas2xyz(
 
     cas2xyz(cas, relax_atoms=relax)
 
+
 @app.command("GSM", no_args_is_help=True)
-def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")], 
-        dc: Annotated[str,typer.Argument(help='driving coordinates with format ["BREAK"/"ADD", atom1, atom2] or ["ANGLE", atom1, atom2, atom3], or ["TORSION", atom1, atom2, atom3, atom4], or ["OOP", atom1, atom2, atom3, atom4]')], 
-        calc: Annotated[str | None, typer.Argument(help="The program you use for calc (xtb, gaussian and orca is supported)")]= "xtb",
-        chg: int = 0,
-        mult: int = 1,
-        ):
+def GSM(
+    file: Annotated[str, typer.Argument(help="The file path of the molecule")],
+    dc: Annotated[
+        str,
+        typer.Argument(
+            help='driving coordinates with format ["BREAK"/"ADD", atom1, atom2] or ["ANGLE", atom1, atom2, atom3], or ["TORSION", atom1, atom2, atom3, atom4], or ["OOP", atom1, atom2, atom3, atom4]'
+        ),
+    ],
+    calc: Annotated[
+        str | None,
+        typer.Argument(
+            help="The program you use for calc (xtb, gaussian and orca is supported)"
+        ),
+    ] = "xtb",
+    chg: int = 0,
+    mult: int = 1,
+):
     CWD = Path.cwd()
-    cache_path = CWD / f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    cache_path = (
+        CWD / f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    )
     Path.mkdir(cache_path, exist_ok=True)
     atoms = [read(Path(file))]
-    if calc=="xtb":
+    if calc == "xtb":
         from xtb_ase import XTB
 
         from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
 
         gsm = ASE_SE_GSM(
-            atom=atoms,
+            atoms=atoms,
             driving_coords=eval(dc),
-            calculator=XTB(method="gfn2-xtb", charge=chg, uhf=mult-1, gbsa={"solvent": "acetone"}),
+            calculator=XTB(
+                method="gfn2-xTB", charge=chg, uhf=mult - 1, gbsa={"solvent": "acetone"}
+            ),
         )
-    elif calc =="gaussian":
+    elif calc == "gaussian":
         from ase.calculators.gaussian import Gaussian
 
         calc = Gaussian(
@@ -327,7 +289,7 @@ def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")
             profile=profile,
             charge=-1,
             mult=1,
-            orcasimpleinput="B3LYP g-d3 def2-TZVP EnGrad", # using EnGrad for force calculation
+            orcasimpleinput="B3LYP g-d3 def2-TZVP EnGrad",  # using EnGrad for force calculation
             orcablocks="%pal nprocs 16 end \n%maxcore 1000",
         )
 
@@ -337,12 +299,9 @@ def GSM(file: Annotated[str,typer.Argument(help="The file path of the molecule")
             calculator=calc,
         )
 
-
     with cd(cache_path):
         gsm.run()
 
 
 if __name__ == "__main__":
     app()
-
-
