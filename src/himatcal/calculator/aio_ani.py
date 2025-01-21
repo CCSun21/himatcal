@@ -2,23 +2,16 @@
 https://github.com/dralgroup/aio-ani/blob/main/aio_ani.py
 """
 
-import sys
-import numpy as np
-import os
-import torchani
-import torch
-from torchani.data._pyanitools import anidataloader
-from torchani.data import TransformableIterable, IterableAdapter
-from os.path import join, isfile, isdir
-import importlib
-import functools
-from torchani.data._pyanitools import anidataloader
-from torchani.data import TransformableIterable, IterableAdapter
-from typing import Tuple, Optional, NamedTuple
-from torch import Tensor
+from __future__ import annotations
 
-from ase.calculators.calculator import Calculator, all_changes
+from typing import Optional, Tuple
+
+import numpy as np
+import torch
+import torchani
 from ase import Atoms
+from ase.calculators.calculator import Calculator, all_changes
+from torch import Tensor
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

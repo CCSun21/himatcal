@@ -1,7 +1,6 @@
 """https://github.com/isayevlab/AIMNet2/blob/main/aimnet2calc/aimnet2ase.py"""
-from __future__ import annotations
 
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
 import torch
