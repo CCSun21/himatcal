@@ -15,6 +15,7 @@ from ase import Atoms, units
 from ase.io import read, write
 from rdkit import Chem
 from rdkit.Chem import AllChem, rdDetermineBonds, rdDistGeom
+from rdkit.Chem.Draw import IPythonConsole
 
 OBJ_OR_STR = Union[str, Chem.rdchem.Mol, Atoms]
 
@@ -133,7 +134,7 @@ def _get_cell_vectors(images: list[Atoms], density: float) -> list[float]:
 
 
 def pack(
-    data: list[list[Atoms]],
+    data: list[list[Atoms] | Atoms],
     counts: list[int],
     density: float,
     seed: int = 42,
@@ -288,16 +289,25 @@ def merge_equivalent_smiles(smiles_list):
     return list(unique_mols.values())
 
 
-def mol_with_atom_and_bond_indices(smiles):
+def mol_with_atom_and_bond_indices(smiles, output_file: str | None = None):
     from rdkit import Chem
-    from rdkit.Chem import Draw
     from rdkit.Chem.Draw import IPythonConsole
 
     mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError("Invalid SMILES string")
+
+    # Add atom indices
     for atom in mol.GetAtoms():
-        atom.SetAtomMapNum(
-            atom.GetIdx() + 1
-        )  # Add 1 to the atom index to display all atom numbers
+        atom.SetAtomMapNum(atom.GetIdx() + 1)
+
+    # Configure drawing options
     IPythonConsole.drawOptions.addBondIndices = True
-    IPythonConsole.molSize = 350, 300
+    IPythonConsole.molSize = (350, 300)
+
+    # Generate and save image
+    if output_file:
+        with pathlib.Path(output_file).open("wb") as f:
+            f.write(mol._repr_png_())
+
     return mol

@@ -77,12 +77,12 @@ class HimatcalSettings(BaseSettings):
     # external key file
     # ---------------------------
     SGHPC1_KEY_PATH: Path = Field(
-        "", description=("Path to the ssh key file of sghpc1")
+        Path(), description=("Path to the ssh key file of sghpc1")
     )
     YEESUAN_KEY_PATH: Path = Field(
-        "", description=("Path to the ssh key file of yeesuan")
+        Path(), description=("Path to the ssh key file of yeesuan")
     )
-    XMU_KEY_PATH: Path = Field("", description=("Path to the ssh key file of XMU"))
+    XMU_KEY_PATH: Path = Field(Path(), description=("Path to the ssh key file of XMU"))
 
     # ---------------------------
     # MongoDB URI

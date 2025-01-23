@@ -267,8 +267,9 @@ def unit_converter(file_content):
     """
     convert the unit from bohr to angstrom
     """
-    from ase.io import read
     import tempfile
+
+    from ase.io import read
 
     bohr_to_angstrom = 0.529177
     try:

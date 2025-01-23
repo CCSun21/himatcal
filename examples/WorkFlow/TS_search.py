@@ -11,14 +11,11 @@ from pathlib import Path
 import pandas as pd
 import yaml
 from ase.io import read, write
-from IPython.display import display
 from monty.os import cd
 from pysisyphus.plot import plot_irc
 from rdkit import Chem
 from rdkit.Chem import AllChem, rdmolops
-from rdkit.Chem.Draw import IPythonConsole
 
-from himatcal.recipes.orca.core import bare_job
 from himatcal.recipes.reaction import MolGraph
 from himatcal.recipes.reaction._base import Reaction
 from himatcal.recipes.reaction.newtonnet import geodesic_ts_hess_irc_newtonnet
@@ -29,14 +26,27 @@ from himatcal.recipes.reaction.utils import (
 )
 
 
-def mol_with_atom_and_bond_indices(smiles):
+def mol_with_atom_and_bond_indices(smiles, output_file: str | None = None):
+    from rdkit import Chem
+    from rdkit.Chem.Draw import IPythonConsole
+
     mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        raise ValueError("Invalid SMILES string")
+
+    # Add atom indices
     for atom in mol.GetAtoms():
-        atom.SetAtomMapNum(
-            atom.GetIdx() + 1
-        )  # Add 1 to the atom index to display all atom numbers
+        atom.SetAtomMapNum(atom.GetIdx() + 1)
+
+    # Configure drawing options
     IPythonConsole.drawOptions.addBondIndices = True
-    IPythonConsole.molSize = 350, 300
+    IPythonConsole.molSize = (350, 300)
+
+    # Generate and save image
+    if output_file:
+        with open(output_file, "wb") as f:
+            f.write(mol._repr_png_())
+
     return mol
 
 
@@ -197,7 +207,7 @@ barriers:
     with Path.open(GS_wd / "GS.yaml", "w") as f:
         f.write(gs_yaml)
 
-    subprocess.run("pysis GS.yaml | tee pysis.log", cwd=GS_wd, shell=True)
+    subprocess.run("pysis GS.yaml | tee pysis.log", cwd=GS_wd, shell=True, check=False)
 
     with cd(GS_wd):
         irc_img = plot_irc()
@@ -232,7 +242,7 @@ def calculate_free_energy(molgraph, charge, mult, filename):
 
 
 def load_config(config_file):
-    with open(config_file, "r") as file:
+    with open(config_file) as file:
         config = yaml.safe_load(file)
     return config
 
