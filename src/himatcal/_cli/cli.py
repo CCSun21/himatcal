@@ -303,5 +303,27 @@ def GSM(
         gsm.run()
 
 
+@app.command(
+    "draw",
+    help="Draw molecule structure with atom and bond indices",
+    no_args_is_help=True,
+)
+def draw_molecule(
+    smiles: Annotated[str, typer.Argument(help="SMILES string of the molecule")],
+    output: Annotated[
+        str, typer.Option("--output", "-o", help="Output file name (PNG format)")
+    ] = "molecule.png",
+):
+    """Draw molecule structure with atom and bond indices"""
+    from himatcal.utils.rdkit.core import mol_with_atom_and_bond_indices
+
+    try:
+        mol_with_atom_and_bond_indices(smiles, output_file=output)
+        print(f"Molecule structure saved to {output}")
+    except ValueError as e:
+        print(f"Error: {e}")
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

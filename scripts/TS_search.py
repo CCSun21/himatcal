@@ -6,13 +6,15 @@ from pathlib import Path
 
 import fire
 import yaml
-from ase.io import read
+from ase.io import read, write
+from pydantic import BaseModel, Field
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
-from himatcal.recipes.quacc._base import clear_quacc_cache  # 新增导入
-from himatcal.recipes.reaction import MolGraph
-from himatcal.recipes.reaction.utils import molgraph_relax
+from himatcal.recipes.quacc._base import clear_quacc_cache
+from himatcal.recipes.reaction import MolGraph, Reaction
+from himatcal.recipes.reaction.newtonnet import geodesic_ts_hess_irc_newtonnet
+from himatcal.recipes.reaction.utils import molgraph_relax, molgraph_spe
 from himatcal.utils.rdkit.core import mol_with_atom_and_bond_indices
 
 
@@ -120,10 +122,52 @@ def prepare_molgraph(smiles, charge, mult, bond_break, filename, break_scale, wo
     return reactant, product
 
 
+def run_newtonnet(reactant, product):
+    job1, job2, job3, job4 = geodesic_ts_hess_irc_newtonnet(reactant, product)
+    ts = MolGraph(atoms=job2["atoms"])
+    reactant_irc = MolGraph(atoms=job3["trajectory"][-1])
+    write("ts_irc_forward.xyz", job3["trajectory"])
+    product_irc = MolGraph(atoms=job4["trajectory"][-1])
+    write("ts_irc_reverse.xyz", job4["trajectory"])
+    return reactant_irc, product_irc, ts
+
+
+def clear_cache(path):
+    logging.info("Cleaning up QUACC cache...")
+    clear_quacc_cache(path)
+    logging.info("Cleaning AutoCG cache...")
+    directory_patterns = ["autoCG_cache", "autoCG_fragments"]
+    for pattern in directory_patterns:
+        for dir_path in path.glob(pattern):
+            if dir_path.is_dir():
+                for file in dir_path.iterdir():
+                    if file.is_file():
+                        file.unlink()
+                dir_path.rmdir()
+            else:
+                dir_path.unlink()
+    logging.info("Cache cleanup complete")
+
+
+class ReactionConfig(BaseModel):
+    """Configuration model for reaction search parameters"""
+
+    reactant_smi: str = Field(..., description="Reactant SMILES string")
+    chg: int = Field(0, description="Molecular charge")
+    mult: int = Field(1, description="Spin multiplicity")
+    cleanup_cache: bool | None = Field(
+        False, description="Whether to clean up QUACC cache after calculation"
+    )
+    spe_method: str = Field(
+        "aimnet2", description="Method to use for single point energy calculations"
+    )
+
+
 def main(config_path="config.yaml"):
-    # * 1. Load config
+    # * 1. Load and validate config
     with Path(config_path).open() as f:
-        config = yaml.safe_load(f)
+        config_data = yaml.safe_load(f)
+    config = ReactionConfig(**config_data)
 
     # * 2. Create main output directory
     output_dir = Path("reactions_output")
@@ -131,7 +175,7 @@ def main(config_path="config.yaml"):
 
     # * 3. read the reactant SMILES and generate molecule image
     mol = mol_with_atom_and_bond_indices(
-        config["reactant_smi"], output_dir / "molecule.png"
+        config.reactant_smi, str(output_dir / "molecule.png")
     )
 
     # * 4. Create a separate directory for each bond and perform calculations
@@ -144,9 +188,9 @@ def main(config_path="config.yaml"):
         try:
             # * 4.2 Prepare the reactant and product
             reactant, product = prepare_molgraph(
-                config["reactant_smi"],
-                config["chg"],
-                config["mult"],
+                config.reactant_smi,
+                config.chg,
+                config.mult,
                 [bond_idx],
                 f"molecule_{bond_idx}.xyz",
                 break_scale=5.0,
@@ -156,25 +200,39 @@ def main(config_path="config.yaml"):
             # * 4.3 Relax the reactant and product
             logging.info("Relaxing reactant and product")
             reactant = molgraph_relax(
-                reactant, config["chg"], config["mult"], method="aimnet2"
+                reactant, config.chg, config.mult, method="aimnet2"
             )
-            product = molgraph_relax(
-                product, config["chg"], config["mult"], method="aimnet2"
-            )
+            product = molgraph_relax(product, config.chg, config.mult, method="aimnet2")
 
             # * 4.4 Save the results in the corresponding directory
             reactant.atoms.write(work_dir / f"reactant_{bond_idx}.xyz")
             product.atoms.write(work_dir / f"product_{bond_idx}.xyz")
             logging.info(f"Successfully processed bond {bond_idx} in {work_dir}")
 
+            # * 4.5 Run NEB calculation using the NewtonNet MLP
+            reactant, product, ts = run_newtonnet(reactant.atoms, product.atoms)
+            reactant.atoms.write(work_dir / f"reactant_irc_{bond_idx}.xyz")
+            product.atoms.write(work_dir / f"product_irc_{bond_idx}.xyz")
+            ts.atoms.write(work_dir / f"ts_irc_{bond_idx}.xyz")
+
+            # * 4.6 Calculate free energy of reactant, product, and TS
+            reactant = molgraph_spe(reactant, config.chg, config.mult)
+            product = molgraph_spe(product, config.chg, config.mult)
+            ts = molgraph_spe(ts, config.chg, config.mult)
+
+            # * 4.7 save the results
+            reaction = Reaction(reactant=reactant, product=product, ts=ts)
+            with (work_dir / "reaction.json").open("w") as f:
+                f.write(reaction.reaction_results.model_dump_json())
+            logging.info(f"results: {reaction.reaction_results.json}")
+
         except Exception as e:
             logging.error(f"Error processing bond {bond_idx} in {work_dir}: {e!s}")
             continue
 
-    # 任务结束后清理缓存
-    if config.get("cleanup_cache", False):
-        logging.info("Cleaning up QUACC cache...")
-        clear_quacc_cache(output_dir)
+        # * 5. Clean up  cache
+        if config.cleanup_cache is True:
+            clear_cache(output_dir)
 
 
 if __name__ == "__main__":

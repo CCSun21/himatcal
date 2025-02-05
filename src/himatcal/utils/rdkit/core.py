@@ -290,6 +290,18 @@ def merge_equivalent_smiles(smiles_list):
 
 
 def mol_with_atom_and_bond_indices(smiles, output_file: str | None = None):
+    """Draw molecule structure with atom and bond indices.
+
+    Args:
+        smiles (str): SMILES string of the molecule
+        output_file (str | None, optional): File path to save the PNG image. Defaults to None.
+
+    Returns:
+        RDKit.Mol: RDKit molecule object with atom indices
+
+    Raises:
+        ValueError: If the SMILES string is invalid
+    """
     from rdkit import Chem
     from rdkit.Chem.Draw import IPythonConsole
 
