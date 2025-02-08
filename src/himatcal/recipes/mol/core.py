@@ -88,6 +88,8 @@ def cas2xyz(CAS_ID, relax_atoms=True):
         f"https://www.chemicalbook.com/CAS/20180601/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20150408/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20200515/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20211123/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20200331/MOL/{CAS_ID}.mol",
     ]
 
     mol = None
