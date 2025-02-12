@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Test suite for mol core functionality."""
 import json
+import os
+import tempfile
 from typing import Callable, Literal
 from unittest.mock import Mock, patch
 
@@ -39,10 +41,18 @@ def create_mock_response(
 
 def assert_valid_xyz_result(cas_id: str):
     """Assert that cas2xyz returns a valid XYZ result for the given CAS ID."""
-    result = cas2xyz(cas_id, relax_atoms=False)
-    assert result is not None
-    assert isinstance(result, str)
-    assert "xyz" in result.lower()
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        current_dir = os.getcwd()
+        try:
+            os.chdir(tmp_dir)
+            result = cas2xyz(cas_id, relax_atoms=False)
+            assert result is not None
+            assert isinstance(result, str)
+            assert "xyz" in result.lower()
+            # Verify the file is created in the temporary directory
+            assert os.path.exists(f"{cas_id}.xyz")
+        finally:
+            os.chdir(current_dir)
 
 
 def assert_sanitized_mol(smiles: str, validation_func: Callable[[Chem.Mol], None]):

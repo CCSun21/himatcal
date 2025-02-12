@@ -36,10 +36,10 @@ rdkit = "^2024.9.5"
 ipython = "^8.32.0"
 goodvibes = "^3.2"
 
-
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^6.0.0"
 ruff = "^0.9.6"
+chemspipy = "^2.0.0"
 
 [tool.ruff]
 select = [
