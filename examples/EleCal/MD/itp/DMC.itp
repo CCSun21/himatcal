@@ -1,0 +1,88 @@
+; Created by Sobtop (http://sobereva.com/soft/sobtop) Version 1.0(dev3.1) on 2023-12-16
+
+
+[ moleculetype ]
+; name          nrexcl
+DMC       3
+
+[ atoms ]
+;  Index   type   residue  resname   atom        cgnr     charge       mass
+     1     c          1      DMC     C             1    1.0450727055   12.010736
+     2     os         1      DMC     O             2   -0.4589660008   15.999405
+     3     os         1      DMC     O             3   -0.4598354247   15.999405
+     4     o          1      DMC     O             4   -0.6335101256   15.999405
+     5     c3         1      DMC     C             5    0.0970400895   12.010736
+     6     h1         1      DMC     H             6    0.0522774395    1.007941
+     7     h1         1      DMC     H             7    0.0522774395    1.007941
+     8     h1         1      DMC     H             8    0.0522774395    1.007941
+     9     c3         1      DMC     C             9    0.0947178629   12.010736
+    10     h1         1      DMC     H            10    0.0528828583    1.007941
+    11     h1         1      DMC     H            11    0.0528828583    1.007941
+    12     h1         1      DMC     H            12    0.0528828583    1.007941
+ 
+[ bonds ]
+; atom_i  atom_j  functype      r0 (nm)    k (kJ/DMC/nm^2)
+    1       2         1        0.133589     2.496051E+05     ; C-O, mSeminario method
+    1       3         1        0.133589     2.496027E+05     ; C-O, mSeminario method
+    1       4         1        0.120454     6.398225E+05     ; C-O, mSeminario method
+    2       9         1        0.143505     2.031180E+05     ; O-C, mSeminario method
+    3       5         1        0.143505     2.031152E+05     ; O-C, mSeminario method
+    5       6         1        0.108616     3.070778E+05     ; C-H, mSeminario method
+    5       7         1        0.108924     2.996637E+05     ; C-H, mSeminario method
+    5       8         1        0.108924     2.996722E+05     ; C-H, mSeminario method
+    9      10         1        0.108924     2.996741E+05     ; C-H, mSeminario method
+    9      11         1        0.108616     3.070776E+05     ; C-H, mSeminario method
+    9      12         1        0.108924     2.996622E+05     ; C-H, mSeminario method
+ 
+[ angles ]
+; atom_i  atom_j  atom_k  functype    a0 (Deg.)  k (kJ/DMC/rad^2)
+    2       1       3         1       108.068      5.163283E+02     ; O-C-O, mSeminario method
+    2       1       4         1       125.966      4.492629E+02     ; O-C-O, mSeminario method
+    3       1       4         1       125.966      4.492614E+02     ; O-C-O, mSeminario method
+    1       2       9         1       114.978      1.273641E+03     ; C-O-C, mSeminario method
+    1       3       5         1       114.978      1.273594E+03     ; C-O-C, mSeminario method
+    3       5       6         1       105.380      4.204984E+02     ; O-C-H, mSeminario method
+    3       5       7         1       110.513      4.591959E+02     ; O-C-H, mSeminario method
+    3       5       8         1       110.514      4.590952E+02     ; O-C-H, mSeminario method
+    6       5       7         1       110.581      3.708958E+02     ; H-C-H, mSeminario method
+    6       5       8         1       110.581      3.709161E+02     ; H-C-H, mSeminario method
+    7       5       8         1       109.232      3.023898E+02     ; H-C-H, mSeminario method
+    2       9      10         1       110.514      4.591274E+02     ; O-C-H, mSeminario method
+    2       9      11         1       105.380      4.205510E+02     ; O-C-H, mSeminario method
+    2       9      12         1       110.513      4.591633E+02     ; O-C-H, mSeminario method
+   10       9      11         1       110.581      3.709361E+02     ; H-C-H, mSeminario method
+   10       9      12         1       109.232      3.023903E+02     ; H-C-H, mSeminario method
+   11       9      12         1       110.580      3.708750E+02     ; H-C-H, mSeminario method
+ 
+[ dihedrals ] ; propers
+; atom_i  atom_j  atom_k  atom_l  functype   d0 (Deg.)   k (kJ/DMC/rad^2)    ; Case of functype=2
+; atom_i  atom_j  atom_k  atom_l  functype  phase (Deg.)  kd (kJ/DMC) pn     ; Case of functype=9
+    1       2       9      10         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    1       2       9      11         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    1       2       9      12         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    1       3       5       6         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    1       3       5       7         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    1       3       5       8         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    2       1       3       5         9       180.000      11.29680    2     ; O-C-O-C, prebuilt X-c-os-X
+    3       1       2       9         9       180.000      11.29680    2     ; O-C-O-C, prebuilt X-c-os-X
+    4       1       2       9         9       180.000      11.29680    2     ; O-C-O-C, prebuilt o-c-os-c3
+    4       1       2       9         9       180.000       5.85760    1     ; O-C-O-C, prebuilt o-c-os-c3
+    4       1       3       5         9       180.000      11.29680    2     ; O-C-O-C, prebuilt o-c-os-c3
+    4       1       3       5         9       180.000       5.85760    1     ; O-C-O-C, prebuilt o-c-os-c3
+
+[ pairs ] ; Yielded based on rotatable dihedrals
+; atom_i  atom_j  functype
+    1      10         1     ; C-O-C-H
+    1      11         1     ; C-O-C-H
+    1      12         1     ; C-O-C-H
+    1       6         1     ; C-O-C-H
+    1       7         1     ; C-O-C-H
+    1       8         1     ; C-O-C-H
+    2       5         1     ; O-C-O-C
+    3       9         1     ; O-C-O-C
+    4       9         1     ; O-C-O-C
+    4       5         1     ; O-C-O-C
+ 
+[ dihedrals ] ; impropers
+; atom_i  atom_j  atom_k  atom_l  functype  phase (Deg.)  kd (kJ/DMC)  pn
+    2       3       1       4         4       180.000      43.93200    2     ; O-O-C-O, prebuilt X-X-c-o

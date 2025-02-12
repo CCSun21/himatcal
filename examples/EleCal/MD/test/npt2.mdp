@@ -1,0 +1,45 @@
+
+title                     = 1ns npt berendsen 1.8T annealing 0.25ns 500K 0.25ns 298K
+; run control
+integrator                = md
+dt                        = 0.001          ; 1 fs
+nsteps                    = 1000000        ; steps, 1 ns
+; Ooutput control
+nstxout                   = 0
+nstvout                   = 0
+nstfout                   = 0
+nstlog                    = 5000
+nstenergy                 = 1000
+nstxout-compressed        = 1000
+;Vel
+gen_vel                   = no             ; generate velocities
+;gen_temp                  = 300
+;gen_seed                  = -1
+; cutoffs
+cutoff-scheme             = Verlet
+pbc                       = xyz            ; periodic boundary conditions
+coulombtype               = PME            ; method for electrostatics
+rcoulomb                  = 1.0            ; Short-range electrostatic cutoff
+rvdw                      = 1.0            ; van der Waals cutoff
+DispCorr                  = EnerPres       ; long-distance contributions to E, P
+; temperature control
+tcoupl                    = v-rescale      ; velocity rescaling thermostat
+tc_grps                   = system         ; coupled to entire system
+tau_t                     = 0.2            ; time constant
+ref_t                     = 298.15            ; temperature (K)
+; pressure control
+pcoupl                    = Parrinello-Rahman ; barostat type: Parrinello-Rahman, berendsen,
+pcoupltype                = isotropic
+tau_p                     = 4               ; time constant
+ref_p                     = 1.0             ; pressure (bar)
+compressibility           = 5e-5            ; pressure bath compressibility (of water, bar^-1)
+; bond parameters
+continuation              = yes             ; restart from NVT
+; constraints               = hbonds        ; h-bond lengths constrained
+; constraint_algorithm      = LINCS         ; constraint method
+
+; annealing
+annealing                 = single          ; single or double
+annealing_npoints         = 4               ; number of points
+annealing_time            = 0 250 500 750       ; time points
+annealing_temp            = 298.15 500 500 298.15  ; temperature points

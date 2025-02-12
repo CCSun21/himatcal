@@ -1,0 +1,112 @@
+; Created by Sobtop (http://sobereva.com/soft/sobtop) Version 1.0(dev3.1) on 2024-10-21
+
+[ atomtypes ]
+; name   at.num      mass       charge   ptype     sigma (nm)    epsilon (kJ/mol)
+os           8    15.999405    0.000000    A      3.000012E-01    7.112800E-01
+o            8    15.999405    0.000000    A      2.959922E-01    8.786400E-01
+c3           6    12.010736    0.000000    A      3.399670E-01    4.577296E-01
+c            6    12.010736    0.000000    A      3.399670E-01    3.598240E-01
+h1           1     1.007941    0.000000    A      2.471353E-01    6.568880E-02
+
+[ moleculetype ]
+; name          nrexcl
+Gaussian       3
+
+[ atoms ]
+;  Index   type   residue  resname   atom        cgnr     charge       mass
+     1     os         1      MOL     O             1   -0.37141564   15.999405
+     2     os         1      MOL     O             2   -0.36828708   15.999405
+     3     o          1      MOL     O             3   -0.55542587   15.999405
+     4     c3         1      MOL     C             4    0.10699971   12.010736
+     5     c3         1      MOL     C             5    0.09340231   12.010736
+     6     c          1      MOL     C             6    0.85245518   12.010736
+     7     h1         1      MOL     H             7    0.05901770    1.007941
+     8     h1         1      MOL     H             8    0.05901770    1.007941
+     9     h1         1      MOL     H             9    0.06211799    1.007941
+    10     h1         1      MOL     H            10    0.06211799    1.007941
+ 
+[ bonds ]
+; atom_i  atom_j  functype      r0 (nm)    k (kJ/mol/nm^2)
+    1       4         1        0.143383     1.914277E+05     ; O-C, mSeminario method
+    1       6         1        0.136374     2.294498E+05     ; O-C, mSeminario method
+    2       5         1        0.143382     1.914166E+05     ; O-C, mSeminario method
+    2       6         1        0.136376     2.294479E+05     ; O-C, mSeminario method
+    3       6         1        0.119437     6.862957E+05     ; O-C, mSeminario method
+    4       5         1        0.153450     1.738181E+05     ; C-C, mSeminario method
+    4       7         1        0.109170     2.995669E+05     ; C-H, mSeminario method
+    4       8         1        0.109575     2.870348E+05     ; C-H, mSeminario method
+    5       9         1        0.109575     2.870224E+05     ; C-H, mSeminario method
+    5      10         1        0.109170     2.995769E+05     ; C-H, mSeminario method
+ 
+[ angles ]
+; atom_i  atom_j  atom_k  functype    a0 (Deg.)  k (kJ/mol/rad^2)
+    4       1       6         1       109.434      1.569183E+03     ; C-O-C, mSeminario method
+    5       2       6         1       109.430      1.568529E+03     ; C-O-C, mSeminario method
+    1       4       5         1       102.787      8.140369E+02     ; O-C-C, mSeminario method
+    1       4       7         1       108.804      4.811591E+02     ; O-C-H, mSeminario method
+    1       4       8         1       108.922      4.942092E+02     ; O-C-H, mSeminario method
+    5       4       7         1       113.845      5.702990E+02     ; C-C-H, mSeminario method
+    5       4       8         1       112.607      5.067880E+02     ; C-C-H, mSeminario method
+    7       4       8         1       109.537      3.114210E+02     ; H-C-H, mSeminario method
+    2       5       4         1       102.784      8.141744E+02     ; O-C-C, mSeminario method
+    2       5       9         1       108.923      4.942521E+02     ; O-C-H, mSeminario method
+    2       5      10         1       108.805      4.811595E+02     ; O-C-H, mSeminario method
+    4       5       9         1       112.614      5.067293E+02     ; C-C-H, mSeminario method
+    4       5      10         1       113.840      5.702798E+02     ; C-C-H, mSeminario method
+    9       5      10         1       109.536      3.113720E+02     ; H-C-H, mSeminario method
+    1       6       2         1       110.217      5.006941E+02     ; O-C-O, mSeminario method
+    1       6       3         1       124.892      4.116712E+02     ; O-C-O, mSeminario method
+    2       6       3         1       124.891      4.110166E+02     ; O-C-O, mSeminario method
+ 
+[ dihedrals ] ; propers
+; atom_i  atom_j  atom_k  atom_l  functype   d0 (Deg.)   k (kJ/mol/rad^2)    ; Case of functype=2
+; atom_i  atom_j  atom_k  atom_l  functype  phase (Deg.)  kd (kJ/mol) pn     ; Case of functype=9
+    1       4       5       2         9         0.000       0.60250    3     ; O-C-C-O, prebuilt os-c3-c3-os
+    1       4       5       2         9         0.000       4.91620    2     ; O-C-C-O, prebuilt os-c3-c3-os
+    1       4       5       9         9         0.000       0.00000    3     ; O-C-C-H, prebuilt h1-c3-c3-os
+    1       4       5       9         9         0.000       1.04600    1     ; O-C-C-H, prebuilt h1-c3-c3-os
+    1       4       5      10         9         0.000       0.00000    3     ; O-C-C-H, prebuilt h1-c3-c3-os
+    1       4       5      10         9         0.000       1.04600    1     ; O-C-C-H, prebuilt h1-c3-c3-os
+    1       6       2       5         9       180.000      11.29680    2     ; O-C-O-C, prebuilt X-c-os-X
+    2       5       4       7         9         0.000       0.00000    3     ; O-C-C-H, prebuilt h1-c3-c3-os
+    2       5       4       7         9         0.000       1.04600    1     ; O-C-C-H, prebuilt h1-c3-c3-os
+    2       5       4       8         9         0.000       0.00000    3     ; O-C-C-H, prebuilt h1-c3-c3-os
+    2       5       4       8         9         0.000       1.04600    1     ; O-C-C-H, prebuilt h1-c3-c3-os
+    2       6       1       4         9       180.000      11.29680    2     ; O-C-O-C, prebuilt X-c-os-X
+    3       6       1       4         9       180.000      11.29680    2     ; O-C-O-C, prebuilt o-c-os-c3
+    3       6       1       4         9       180.000       5.85760    1     ; O-C-O-C, prebuilt o-c-os-c3
+    3       6       2       5         9       180.000      11.29680    2     ; O-C-O-C, prebuilt o-c-os-c3
+    3       6       2       5         9       180.000       5.85760    1     ; O-C-O-C, prebuilt o-c-os-c3
+    4       5       2       6         9         0.000       1.60247    3     ; C-C-O-C, prebuilt c3-c3-os-c
+    4       5       2       6         9       180.000       3.34720    1     ; C-C-O-C, prebuilt c3-c3-os-c
+    5       4       1       6         9         0.000       1.60247    3     ; C-C-O-C, prebuilt c3-c3-os-c
+    5       4       1       6         9       180.000       3.34720    1     ; C-C-O-C, prebuilt c3-c3-os-c
+    6       1       4       7         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    6       1       4       8         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    6       2       5       9         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    6       2       5      10         9         0.000       1.60387    3     ; C-O-C-H, prebuilt X-c3-os-X
+    7       4       5       9         9         0.000       0.65084    3     ; H-C-C-H, prebuilt X-c3-c3-X
+    7       4       5      10         9         0.000       0.65084    3     ; H-C-C-H, prebuilt X-c3-c3-X
+    8       4       5       9         9         0.000       0.65084    3     ; H-C-C-H, prebuilt X-c3-c3-X
+    8       4       5      10         9         0.000       0.65084    3     ; H-C-C-H, prebuilt X-c3-c3-X
+
+[ pairs ] ; Yielded based on rotatable dihedrals
+; atom_i  atom_j  functype
+    1       9         1     ; O-C-C-H
+    1      10         1     ; O-C-C-H
+    2       7         1     ; O-C-C-H
+    2       8         1     ; O-C-C-H
+    3       4         1     ; O-C-O-C
+    3       5         1     ; O-C-O-C
+    6       7         1     ; C-O-C-H
+    6       8         1     ; C-O-C-H
+    6       9         1     ; C-O-C-H
+    6      10         1     ; C-O-C-H
+    7       9         1     ; H-C-C-H
+    7      10         1     ; H-C-C-H
+    8       9         1     ; H-C-C-H
+    8      10         1     ; H-C-C-H
+ 
+[ dihedrals ] ; impropers
+; atom_i  atom_j  atom_k  atom_l  functype  phase (Deg.)  kd (kJ/mol)  pn
+    1       2       6       3         4       180.000      43.93200    2     ; O-O-C-O, prebuilt X-X-c-o

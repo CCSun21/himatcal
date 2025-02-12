@@ -1,0 +1,21 @@
+title                      = minimization
+
+; run control
+integrator                 = steep      ; steepest descents minimization
+emtol                      = 100        ; stop when max force < 100.0 kJ/mol/nm
+emstep                     = 0.01       ; energy step size
+nsteps                     = 500000     ; max number of steps
+
+; output control
+nstxout                    = 1000       ; steps per position save
+nstlog                     = 1000       ; steps per log entry
+nstenergy                  = 1000       ; steps per energy file entry
+
+; cutoffs
+cutoff-scheme              = Verlet     ; Buffered neighbor searching
+nstlist                    = 10         ; neighbor list update frequency
+ns_type                    = grid       ; neighbor list method (simple, grid)
+pbc                        = xyz        ; periodic boundary conditions
+coulombtype                = PME        ; method for electrostatics
+rcoulomb                   = 0.5        ; Short-range electrostatic cutoff
+rvdw                       = 0.5        ; van der Waals cutoff

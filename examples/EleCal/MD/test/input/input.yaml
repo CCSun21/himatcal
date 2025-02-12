@@ -1,0 +1,15 @@
+build_pdb: true # whether to build pdb file
+compound_dict:
+  {
+    "EC": { "mol": 31, "n_atoms": 310 },
+    "EMC": { "mol": 31, "n_atoms": 465 },
+    "Li": { "mol": 5, "n_atoms": 5 },
+    "PF6": { "mol": 5, "n_atoms": 35 },
+  }
+density: 1 # g/cm^3
+box: # [x,y, z]
+
+pdb_file: "input.pdb" # path to input pdb file
+
+predefined_mdp: true # using predefined mdp files
+mdp_files: ["min", "nvt1", "npt1", "npt2", "npt3"]

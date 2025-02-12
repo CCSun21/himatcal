@@ -1,0 +1,34 @@
+data_image0
+_chemical_formula_structural       Fe6P3
+_chemical_formula_sum              "Fe6 P3"
+_cell_length_a       5.78548826292073
+_cell_length_b       5.773839685704301
+_cell_length_c       3.3569704893782304
+_cell_angle_alpha    89.99844423238976
+_cell_angle_beta     90.00703485266959
+_cell_angle_gamma    120.06940786018049
+
+_space_group_name_H-M_alt    "P 1"
+_space_group_IT_number       1
+
+loop_
+  _space_group_symop_operation_xyz
+  'x, y, z'
+
+loop_
+  _atom_site_type_symbol
+  _atom_site_label
+  _atom_site_symmetry_multiplicity
+  _atom_site_fract_x
+  _atom_site_fract_y
+  _atom_site_fract_z
+  _atom_site_occupancy
+  Fe  Fe1       1.0  0.2561203854960179  7.31744422364055e-05  0.024885536087366916  1.0000
+  Fe  Fe2       1.0  0.9996604848057216  0.2561243272023957  0.026934060276521888  1.0000
+  Fe  Fe3       1.0  0.7440471823003587  0.7441840173730052  0.02571129944332277  1.0000
+  Fe  Fe4       1.0  0.5949876874767905  0.0009919155852354913  0.5251168588217928  1.0000
+  Fe  Fe5       1.0  0.002642947972311554  0.5966770133315081  0.5261934691558221  1.0000
+  Fe  Fe6       1.0  0.4009537903325931  0.40054497164637726  0.5255104616504032  1.0000
+  P   P1        1.0  0.9990228277315507  0.9994287465724321  0.5262023150003727  1.0000
+  P   P2        1.0  0.33516125850611045  0.6676221834881054  0.02572996010014965  1.0000
+  P   P3        1.0  0.6673775595633326  0.33488440642898554  0.02507671108179558  1.0000

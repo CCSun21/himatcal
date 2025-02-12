@@ -1,0 +1,38 @@
+# Ignore computation temp directories and outputs
+quacc-*
+__pycache__/
+
+# Computational outputs
+*.chk
+*.log
+*.out
+*.cube
+*.fchk
+*.molden
+*.wfn
+*.wfx
+
+# Temporary and intermediate files
+*.tmp
+*~
+.DS_Store
+
+# MD simulation outputs
+*.trr
+*.tpr
+*.xtc
+*.edr
+*.gro
+*.cpt
+
+# Keep input structure files
+!*.xyz
+!*.pdb
+!*.mol
+!*.json
+!*.cif
+!*.itp
+!*.top
+
+# Keep python scripts
+!*.py

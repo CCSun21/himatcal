@@ -1,0 +1,7 @@
+{
+  "EC": { "mol": 431, "n_atoms": 4310 },
+  "EMC": { "mol": 365, "n_atoms": 5475 },
+  "DMC": { "mol": 843, "n_atoms": 10116 },
+  "PF6": { "mol": 13, "n_atoms": 91 },
+  "Li": { "mol": 13, "n_atoms": 13 }
+}

@@ -1,0 +1,6 @@
+[paths]
+reactant = "/home/suncc/Code/TAT/01.ElectrolyteCal/18.2412Reaction/02.reaction/TS_search/TS-WORKFLOW/reactant.xyz"
+product = "/home/suncc/Code/TAT/01.ElectrolyteCal/18.2412Reaction/02.reaction/TS_search/TS-WORKFLOW/product.xyz"
+model_path = "/home/suncc/Code/TAT/01.ElectrolyteCal/18.2412Reaction/02.reaction/TS_search/TS-WORKFLOW/best_model_state.tar"
+settings_path = "/home/suncc/Code/TAT/01.ElectrolyteCal/18.2412Reaction/02.reaction/TS_search/TS-WORKFLOW/config0.yml"
+

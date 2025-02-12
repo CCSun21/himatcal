@@ -1,0 +1,14 @@
+; Created by Sobtop (http://sobereva.com/soft/sobtop) Version 1.0(dev3.1) on 2023-12-16
+
+
+[ moleculetype ]
+; name          nrexcl 
+Li       3 
+
+[ atoms ]
+;  Index   type   residue  resname   atom        cgnr     charge       mass
+     1     UF_Li      1      Li     Li            1    1.00000000    6.940037
+
+; No pair needs to generate
+
+; No improper needs to generate

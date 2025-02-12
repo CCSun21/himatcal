@@ -1,0 +1,89 @@
+<ForceField><!--Created by AuToFF-->
+    <AtomTypes>
+        <Type name="O=" class="O=" element="O" mass="15.999400" />
+        <Type name="CC=O" class="CC=O" element="C" mass="12.011000" />
+        <Type name="OC_c5" class="OC_c5" element="O" mass="15.999400" />
+        <Type name="CH2_c5" class="CH2_c5" element="CH2" mass="14.027000" />
+    </AtomTypes>
+    <Residues>
+        <Residue name="UNK">
+            <Atom name="O01" type="O=" charge="-0.424000" />
+            <Atom name="C02" type="CC=O" charge="0.424000" />
+            <Atom name="O03" type="OC_c5" charge="0.000000" />
+            <Atom name="CH204" type="CH2_c5" charge="0.000000" />
+            <Atom name="CH205" type="CH2_c5" charge="0.000000" />
+            <Atom name="O06" type="OC_c5" charge="0.000000" />
+            <Bond atomName1="C02" atomName2="O01" />
+            <Bond atomName1="O03" atomName2="C02" />
+            <Bond atomName1="CH204" atomName2="CH205" />
+            <Bond atomName1="CH204" atomName2="O03" />
+            <Bond atomName1="CH205" atomName2="O06" />
+            <Bond atomName1="O06" atomName2="C02" />
+        </Residue>
+    </Residues>
+    <CustomBondForce energy="kb*(r-b0)^2">
+        <PerBondParameter name="b0" />
+        <PerBondParameter name="kb" />
+        <Bond class1="CC=O" class2="O=" b0="0.123000" kb="238486.400000" />
+    </CustomBondForce>
+    <CustomBondForce energy="kb*(r-b0)^2">
+        <PerBondParameter name="b0" />
+        <PerBondParameter name="kb" />
+        <Bond class1="OC_c5" class2="CC=O" b0="0.135053" kb="1000000.000000" />
+        <Bond class1="CH2_c5" class2="CH2_c5" b0="0.152694" kb="1000000.000000" />
+        <Bond class1="CH2_c5" class2="OC_c5" b0="0.141412" kb="1000000.000000" />
+    </CustomBondForce>
+    <CustomAngleForce energy="k0*(theta-theta_0)^2">
+        <PerAngleParameter name="theta_0" />
+        <PerAngleParameter name="k0" />
+        <Angle class1="O=" class2="CC=O" class3="OC_c5" theta_0="2.183825" k0="1000.000000" />
+        <Angle class1="OC_c5" class2="CC=O" class3="OC_c5" theta_0="1.915460" k0="1000.000000" />
+        <Angle class1="CC=O" class2="OC_c5" class3="CH2_c5" theta_0="1.918044" k0="1000.000000" />
+        <Angle class1="OC_c5" class2="CH2_c5" class3="CH2_c5" theta_0="1.790332" k0="1000.000000" />
+    </CustomAngleForce>
+    <CustomTorsionForce energy="kphi*(1+cos(n*theta-phi0))">
+        <PerTorsionParameter name="phi0" />
+        <PerTorsionParameter name="kphi" />
+        <PerTorsionParameter name="n" />
+        <Proper class1="OC_c5" class2="CC=O" class3="OC_c5" class4="CH2_c5" phi0="0.139881"
+            kphi="0.000000" n="1.000000" />
+        <Proper class1="CH2_c5" class2="OC_c5" class3="CC=O" class4="O=" phi0="-3.001506"
+            kphi="0.000000" n="1.000000" />
+        <Improper class1="CC=O" class2="O=" class3="OC_c5" class4="OC_c5" phi0="3.141593"
+            kphi="43.932000" n="2.000000" />
+    </CustomTorsionForce>
+    <CustomTorsionForce
+        energy="0.5*(C1*(1+cos(theta))+C2*(1-cos(2*theta))+C3*(1+cos(3*theta))+C4*(1-cos(4*theta)))">
+        <PerTorsionParameter name="C1" />
+        <PerTorsionParameter name="C2" />
+        <PerTorsionParameter name="C3" />
+        <PerTorsionParameter name="C4" />
+        <Proper class1="CH2_c5" class2="CH2_c5" class3="OC_c5" class4="CC=O" C1="678.555000"
+            C2="-280.198000" C3="39.774000" C4="0.000000" />
+        <Proper class1="OC_c5" class2="CH2_c5" class3="CH2_c5" class4="OC_c5" C1="758.802000"
+            C2="-295.729000" C3="34.919000" C4="0.000000" />
+    </CustomTorsionForce>
+    <NonbondedForce coulomb14scale="1" lj14scale="0">
+        <UseAttributeFromResidue name="charge" />
+        <Atom class="O=" sigma="1.0" epsilon="0.0" />
+        <Atom class="CC=O" sigma="1.0" epsilon="0.0" />
+        <Atom class="OC_c5" sigma="1.0" epsilon="0.0" />
+        <Atom class="CH2_c5" sigma="1.0" epsilon="0.0" />
+    </NonbondedForce>
+    <LennardJonesForce lj14scale="0">
+        <Atom class="O=" sigma="0.305000" epsilon="0.656838" />
+        <Atom class="CC=O" sigma="0.382000" epsilon="0.332576" />
+        <Atom class="OC_c5" sigma="0.280000" epsilon="0.457293" />
+        <Atom class="CH2_c5" sigma="0.388000" epsilon="0.468101" />
+        <NBFixPair class1="O=" class2="O=" sigma="0.305000" epsilon="0.656838" />
+        <NBFixPair class1="O=" class2="CC=O" sigma="0.341336" epsilon="0.467385" />
+        <NBFixPair class1="O=" class2="OC_c5" sigma="0.292233" epsilon="0.548058" />
+        <NBFixPair class1="O=" class2="CH2_c5" sigma="0.344006" epsilon="0.554497" />
+        <NBFixPair class1="CC=O" class2="CC=O" sigma="0.382000" epsilon="0.332576" />
+        <NBFixPair class1="CC=O" class2="OC_c5" sigma="0.327047" epsilon="0.389980" />
+        <NBFixPair class1="CC=O" class2="CH2_c5" sigma="0.384988" epsilon="0.394562" />
+        <NBFixPair class1="OC_c5" class2="OC_c5" sigma="0.280000" epsilon="0.457293" />
+        <NBFixPair class1="OC_c5" class2="CH2_c5" sigma="0.329606" epsilon="0.462665" />
+        <NBFixPair class1="CH2_c5" class2="CH2_c5" sigma="0.388000" epsilon="0.468101" />
+    </LennardJonesForce>
+</ForceField>
