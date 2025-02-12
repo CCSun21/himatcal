@@ -73,3 +73,9 @@ venv.bak/
 try/# pixi environments
 .pixi
 *.egg-info
+
+
+# ard_gsm
+ard_gsm/
+ard_gsm/ard_gsm/
+project/

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import urllib.request
 from io import StringIO
@@ -12,7 +13,9 @@ from ase.io import write
 from chemspipy import ChemSpider
 from pydantic import BaseModel, field_validator
 from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem, rdDistGeom, rdForceFieldHelpers
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from himatcal import SETTINGS
 from himatcal.recipes.crest.core import relax as crest_relax
@@ -22,6 +25,127 @@ if TYPE_CHECKING:
     from typing import Literal
 
     from ase import Atoms
+    from rdkit.Chem.rdchem import Mol
+
+
+def sanitize_mol(mol):
+    """
+    Sanitize and clean up a molecular structure.
+
+    Args:
+        mol (rdkit.Chem.Mol): The molecular structure to sanitize.
+
+    Returns:
+        rdkit.Chem.Mol or None: The sanitized molecular structure if successful, None otherwise.
+    """
+    if mol is None:
+        logging.warning("Input molecule is None")
+        return None
+
+    # Store original atom formal charges using dictionary comprehension
+    original_charges = {
+        atom.GetIdx(): atom.GetFormalCharge() for atom in mol.GetAtoms()
+    }
+
+    try:
+
+        def _process_atom(atom):
+            symbol = atom.GetSymbol()
+
+            if symbol == "F":
+                # Ensure fluorine has only one bond and -1 charge
+                while atom.GetDegree() > 1:
+                    bonds = atom.GetBonds()
+                    mol.RemoveBond(bonds[0].GetBeginAtomIdx(), bonds[0].GetEndAtomIdx())
+                    logging.info(
+                        f"Removed extra bond from fluorine atom {atom.GetIdx()}"
+                    )
+
+                # Set fluorine to its typical -1 oxidation state
+                atom.SetFormalCharge(-1)
+                logging.info(f"Set fluorine atom {atom.GetIdx()} charge to -1")
+                atom.UpdatePropertyCache(strict=False)
+
+            elif symbol in ["Cl", "Br", "I"]:
+                # Handle other halogens similarly
+                while atom.GetDegree() > 1:
+                    bonds = atom.GetBonds()
+                    mol.RemoveBond(bonds[0].GetBeginAtomIdx(), bonds[0].GetEndAtomIdx())
+                atom.UpdatePropertyCache(strict=False)
+
+        # Process atoms
+        for atom in mol.GetAtoms():
+            _process_atom(atom)
+
+        # Try to update properties with the new charge assignments
+        for atom in mol.GetAtoms():
+            atom.UpdatePropertyCache(strict=False)
+
+        # Perform basic cleanup
+        Chem.SanitizeMol(mol, sanitizeOps=Chem.SANITIZE_ADJUSTHS)
+        logging.info("Successfully adjusted hydrogens")
+
+        # Check overall molecule charge
+        total_charge = sum(atom.GetFormalCharge() for atom in mol.GetAtoms())
+        if total_charge != 0:
+            logging.warning(
+                f"Total molecular charge is {total_charge}, attempting to balance..."
+            )
+
+            # Try to find metal atoms or typical cation/anion formers to balance charge
+            for atom in mol.GetAtoms():
+                symbol = atom.GetSymbol()
+                if symbol in ["Na", "K", "Li", "Ca", "Mg"] and total_charge < 0:
+                    atom.SetFormalCharge(1)
+                    total_charge += 1
+                    if total_charge == 0:
+                        break
+
+        # Final sanitization steps
+        Chem.SanitizeMol(
+            mol, sanitizeOps=Chem.SANITIZE_SYMMRINGS | Chem.SANITIZE_CLEANUP
+        )
+
+        # Verify final structure
+        for atom in mol.GetAtoms():
+            valence = atom.GetExplicitValence()
+            allowed = atom.GetImplicitValence()
+            if valence > allowed:
+                logging.warning(
+                    f"Atom {atom.GetSymbol()} {atom.GetIdx()} has valence {valence} "
+                    f"(allowed: {allowed}). Attempting to adjust..."
+                )
+                # Try to restore original charge if valence is invalid
+                original_charge = original_charges.get(atom.GetIdx(), 0)
+                atom.SetFormalCharge(original_charge)
+                atom.UpdatePropertyCache(strict=False)
+
+        # Final check of structure validity
+        Chem.SanitizeMol(mol, sanitizeOps=Chem.SANITIZE_ALL)
+
+        # Ensure fluorine charges are maintained
+        for atom in mol.GetAtoms():
+            if atom.GetSymbol() == "F":
+                atom.SetFormalCharge(-1)
+                atom.UpdatePropertyCache(strict=False)
+
+        return mol
+
+    except Exception as e:
+        logging.error(f"Sanitization failed: {e!s}")
+        try:
+            # Fallback: try to rebuild molecule with original charges
+            mol_block = Chem.MolToMolBlock(mol)
+            if new_mol := Chem.MolFromMolBlock(
+                mol_block, removeHs=False, sanitize=False
+            ):
+                for atom_idx, charge in original_charges.items():
+                    new_mol.GetAtomWithIdx(atom_idx).SetFormalCharge(charge)
+                new_mol.UpdatePropertyCache(strict=False)
+                return new_mol
+        except Exception as e:
+            logging.error(f"Failed to rebuild molecule: {e}")
+            return None
 
 
 def get_molecular_structure(
@@ -32,104 +156,301 @@ def get_molecular_structure(
     """
     Get molecular structure from CAS number, using chemspipy from RSC ChemSpider.
 
-    This function retrieves the molecular structure corresponding to the provided CAS number from ChemSpider, processes it, and optionally writes it to a file in XYZ format.
-
     Args:
         molecular_cas (str): The CAS number of the molecule.
-        write_mol (str | None): The file name to write the molecular structure to in XYZ format. Defaults to None.
-        chemspider_api (str): The ChemSpider API key. Defaults to the value in SETTINGS.CHEMSPIDER_API_KEY.
+        write_mol (bool): Whether to write the molecule to XYZ file. Defaults to True.
+        chemspider_api (str): The ChemSpider API key.
 
     Returns:
-        None
+        rdkit.Chem.Mol or None: The molecular structure if successful, None otherwise.
+
+    Raises:
+        ValueError: If the molecular structure cannot be retrieved or is invalid.
     """
-
     cs = ChemSpider(chemspider_api)
-    c1 = cs.search(molecular_cas)[0]
     try:
+        results = cs.search(molecular_cas)
+        if not results:
+            return None
+
+        c1 = results[0]
         mol_file = StringIO(c1.mol_3d)
-        mol = Chem.MolFromMolBlock(mol_file.getvalue(), removeHs=False)
+        mol = Chem.MolFromMolBlock(
+            mol_file.getvalue(),
+            removeHs=False,
+            sanitize=False,
+        )
+
+        mol = sanitize_mol(mol)
+        if mol is None:
+            return None
+
         mol = Chem.AddHs(mol, addCoords=True)
+        AllChem.EmbedMolecule(mol)  # Generate 3D coordinates
+        rdForceFieldHelpers.UFFOptimizeMolecule(mol)  # Optimize using UFF
+
         if write_mol:
-            Chem.MolToXYZFile(mol, f"{molecular_cas}.xyz")
+            try:
+                Chem.MolToXYZFile(mol, f"{molecular_cas}.xyz")
+            except Exception as e:
+                logging.error(f"警告: 无法写入XYZ文件: {e!s}")
+
         return mol
+
     except Exception as e:
-        return f"Unexpected error: {e}"
+        logging.error(f"错误: 从ChemSpider获取结构时发生错误: {e!s}")
+        return None
 
 
-def consumeApi(urlPath):
-    dataResponse = requests.get(urlPath)
-    return None if (dataResponse.status_code != 200) else dataResponse.text
+def get_with_retry(
+    url: str, max_retries: int = 3, backoff_factor: float = 0.3
+) -> requests.Response:
+    """
+    Makes an HTTP GET request with exponential backoff retries
+    """
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=max_retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    return session.get(url, timeout=10)
 
 
-def cas2xyz(CAS_ID, relax_atoms=True):
+def consumeApi(urlPath: str) -> str | None:
+    """
+    Consume an API endpoint with retry logic
+    """
+    try:
+        response = get_with_retry(urlPath)
+        return response.text if response.status_code == 200 else None
+    except Exception as e:
+        logging.warning(f"Failed to consume API {urlPath}: {e}")
+        return None
+
+
+def get_pubchem_mol(cas_id: str) -> Mol | None:
+    """
+    Retrieve molecular structure from PubChem using CAS ID.
+
+    Args:
+        cas_id (str): The CAS ID of the molecule
+
+    Returns:
+        Mol | None: The molecular structure if successful, None otherwise
+    """
+    try:
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_id}/cids/JSON"
+        response = requests.get(url)
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
+        if "IdentifierList" not in data:
+            return None
+
+        cid = data["IdentifierList"]["CID"][0]
+
+        sdf_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/CID/{cid}/SDF"
+        sdf_response = requests.get(sdf_url)
+        if sdf_response.status_code != 200:
+            return None
+
+        mol = Chem.MolFromMolBlock(sdf_response.text, removeHs=False, sanitize=False)
+        return sanitize_mol(mol) if mol is not None else None
+    except Exception as e:
+        logging.warning("Failed to retrieve structure from PubChem: %s", e)
+        return None
+
+
+def cas2xyz(CAS_ID: str, relax_atoms: bool = True) -> str | None:
     """
     Converts a CAS ID into an XYZ file format representation of the corresponding molecule.
 
-    This function retrieves molecular data from the Common Chemistry API using the provided CAS ID, constructs a molecular structure, and optionally relaxes the atomic positions before saving the structure to an XYZ file.
+    This function first tries to convert CAS to SMILES, then retrieves molecular data from multiple sources,
+    constructs a molecular structure, and optionally relaxes the atomic positions before saving the structure to an XYZ file.
 
     Args:
         CAS_ID (str): The Chemical Abstracts Service identifier for the desired molecule.
         relax_atoms (bool): A flag indicating whether to relax the atomic positions before saving. Defaults to True.
 
     Returns:
-        None
+        Optional[str]: Contents of the XYZ file if successful, None otherwise
 
     Raises:
-        ValueError: If the CAS ID is invalid or if the API call fails.
-
-    Examples:
-        cas2xyz("50-00-0")  # Converts the CAS ID for formaldehyde to an XYZ file.
+        ValueError: If no valid molecular structure could be obtained from any source.
     """
+    mol = None
+    success_source = None
+
+    # First try getting SMILES from CAS
+    try:
+        logging.info("Attempting to convert CAS to SMILES...")
+        if smiles := cas_to_smiles(CAS_ID):
+            mol = Chem.MolFromSmiles(smiles)
+            if mol := sanitize_mol(mol):
+                success_source = "SMILES conversion"
+                logging.info(
+                    "Successfully converted CAS to SMILES and created molecule"
+                )
+    except Exception as e:
+        logging.warning(f"Failed to convert CAS to SMILES: {e}")
+
+    # If SMILES conversion failed, try PubChem
+    if not mol:
+        try:
+            logging.info("Attempting to retrieve structure from PubChem...")
+            mol = get_pubchem_mol(CAS_ID)
+            if mol:
+                success_source = "PubChem"
+                logging.info("Successfully retrieved structure from PubChem")
+        except Exception as e:
+            logging.warning("Failed to retrieve from PubChem: %s", e)
+
+    # Try all web sources if previous methods failed
     sources = [
         f"https://commonchemistry.cas.org/api/detail?cas_rn={CAS_ID}",
         f"https://www.chemicalbook.com/CAS/mol/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20210305/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20210111/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20180601/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20180713/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20150408/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20200515/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20211123/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20200331/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/MOL/{CAS_ID}.mol",
     ]
 
-    mol = None
-    for source in sources:
-        try:
-            if "commonchemistry" in source:
-                result_dict = json.loads(consumeApi(source))
-                mol = Chem.MolFromInchi(result_dict["inchi"])
-            else:
-                request = urllib.request.Request(
-                    source, headers={"User-Agent": "Mozilla/5.0"}
-                )
-                response = urllib.request.urlopen(request)
-                if response.status == 200:
-                    mol_file_content = response.read().decode("utf-8")
-                    mol = Chem.MolFromMolBlock(mol_file_content, removeHs=False)
-            if mol:
-                break
-        except Exception:
-            # print(f"Failed to retrieve data from {source}: {e}")
-            continue
+    if not mol:
+        for source in sources:
+            try:
+                if "commonchemistry" in source:
+                    api_result = consumeApi(source)
+                    if api_result is not None:
+                        result_dict = json.loads(api_result)
+                        if "inchi" not in result_dict:
+                            logging.warning(
+                                "No InChI found in response from %s", source
+                            )
+                            continue
+                        mol = Chem.MolFromInchi(result_dict["inchi"])
+                        if mol is None:
+                            logging.warning(
+                                "Failed to create molecule from InChI from %s", source
+                            )
+                            continue
+                else:
+                    request = urllib.request.Request(
+                        source, headers={"User-Agent": "Mozilla/5.0"}
+                    )
+                    response = urllib.request.urlopen(request)
+                    if response.status == 200:
+                        mol_file_content = response.read().decode("utf-8")
+                        mol = Chem.MolFromMolBlock(mol_file_content, removeHs=False)
+                        if mol is None:
+                            logging.warning(
+                                "Failed to create molecule from MOL file from %s",
+                                source,
+                            )
+                            continue
 
+                mol = sanitize_mol(mol)
+                if mol:
+                    success_source = source
+                    logging.info(
+                        "Successfully retrieved and sanitized data from %s", source
+                    )
+                    break
+                logging.warning("Sanitization failed for molecule from %s", source)
+            except Exception as e:
+                logging.warning(
+                    "Failed to retrieve or process data from %s: %s", source, e
+                )
+                continue
+
+    # Try ChemSpider as last resort
     if not mol:
         try:
+            logging.info("Attempting to retrieve structure from ChemSpider...")
             mol = get_molecular_structure(CAS_ID)
+            if mol:
+                success_source = "ChemSpider"
+                logging.info("Successfully retrieved structure from ChemSpider")
         except Exception as e:
-            raise ValueError(
-                f"Could not retrieve molecular data for CAS ID {CAS_ID}"
-            ) from e
+            logging.warning("Failed to retrieve from ChemSpider: %s", e)
 
-    mol = Chem.AddHs(mol, addCoords=True)
-    AllChem.EmbedMultipleConfs(mol, numConfs=10)
-    if relax_atoms:
-        atoms = rdkit2ase(mol)
-        atoms_relaxed = crest_relax(atoms)
-        write(f"{CAS_ID}.xyz", atoms_relaxed)
-    else:
-        Chem.MolToXYZFile(mol, f"{CAS_ID}.xyz")
-    with Path.open(Path(f"{CAS_ID}.xyz")) as file:
-        return file.read()
+    if not mol:
+        raise ValueError(
+            f"Could not create valid molecular structure for CAS ID {CAS_ID} from any source. "
+            f"Last successful source attempt: {success_source}"
+        )
+
+    try:
+        mol = Chem.AddHs(mol, addCoords=True)
+        logging.info("Successfully added hydrogens")
+
+        # Try different 3D embedding methods
+        try:
+            # First try ETKDG
+            params = rdDistGeom.ETKDGv3()
+            params.randomSeed = 42  # For reproducibility
+            rdDistGeom.EmbedMolecule(mol, params)
+            logging.info("Successfully embedded molecule using ETKDG")
+        except Exception as e:
+            logging.warning(f"ETKDG embedding failed: {e}, trying distance geometry...")
+            try:
+                # Fallback to basic distance geometry
+                rdDistGeom.EmbedMolecule(mol, randomSeed=42)
+                logging.info("Successfully embedded molecule using distance geometry")
+            except Exception as e2:
+                logging.error(f"All embedding methods failed: {e2}")
+                return None
+
+        # Try UFF optimization first
+        try:
+            rdForceFieldHelpers.UFFOptimizeMolecule(mol, maxIters=4000)
+            logging.info("Successfully optimized molecule using UFF")
+        except Exception as e:
+            logging.warning(f"UFF optimization failed: {e}, trying MMFF94...")
+            try:
+                # Fallback to MMFF94
+                rdForceFieldHelpers.MMFFOptimizeMolecule(mol, maxIters=4000)
+                logging.info("Successfully optimized molecule using MMFF94")
+            except Exception as e2:
+                logging.error(f"All force field optimizations failed: {e2}")
+                return None
+
+        if relax_atoms:
+            atoms = rdkit2ase(mol)
+            logging.info("Successfully converted to ASE atoms")
+
+            atoms_relaxed = crest_relax(atoms)
+            if atoms_relaxed is None:
+                logging.warning("CREST relaxation failed, using unrelaxed structure")
+                write(f"{CAS_ID}.xyz", atoms)
+            else:
+                logging.info("Successfully relaxed structure with CREST")
+                filename = f"{CAS_ID}.xyz"
+                write(filename, atoms_relaxed)
+                with Path(filename).open() as f:
+                    content = f.read()
+                # 确保文件名包含在输出中
+                return f"{filename}\n{content}"
+        else:
+            filename = f"{CAS_ID}.xyz"
+            Chem.MolToXYZFile(mol, filename)
+            logging.info("Successfully wrote XYZ file without relaxation")
+            with Path(filename).open() as f:
+                content = f.read()
+            # 确保文件名包含在输出中
+            return f"{filename}\n{content}"
+    except Exception as e:
+        raise ValueError(f"Error during molecule processing: {e}") from e
 
 
 # TODO: include PubGrep ( https://github.com/grimme-lab/PubGrep )
@@ -168,11 +489,24 @@ class CASNumber(BaseModel):
 
     @field_validator("cas_number")
     def validate_cas_number(cls, value):
+        """Validate CAS number format and length."""
+        # 验证基本格式
         pattern = re.compile(r"^\d{2,6}-\d{2}-\d{1}$")
         if not re.match(pattern, value):
             raise ValueError(
                 "Invalid CAS number format. It should be 2-6 digits followed by a hyphen, then 2 digits, and another hyphen followed by 1 digit."
             )
+
+        # 验证第一部分的长度
+        parts = value.split("-")
+        if len(parts[0]) > 6:  # 检查第一部分是否超过6位数字
+            raise ValueError("Invalid CAS number: first part cannot exceed 6 digits")
+
+        # 验证整体长度
+        total_digits = sum(len(part) for part in parts)
+        if total_digits > 9:  # CAS号的数字总数不应超过9位
+            raise ValueError("Invalid CAS number: total length cannot exceed 9 digits")
+
         return value
 
 
@@ -180,33 +514,37 @@ def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"
     """
     convert cas to smiles using nci api
     """
-    # * validize the cas_number
-    cas_number = CASNumber(cas_number=cas_number).cas_number
+    try:
+        # * validize the cas_number
+        cas_number = CASNumber(cas_number=cas_number).cas_number
+    except ValueError:
+        return None
 
     if source == "cirpy":
         url = f"https://cactus.nci.nih.gov/chemical/structure/{cas_number}/smiles"
-
         try:
             response = requests.get(url)
             response.raise_for_status()
             smiles = response.text.strip()
             return smiles or None
-
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching data for CAS {cas_number}: {e}")
+            logging.error(f"Error fetching data for CAS {cas_number}: {e}")
             return None
     elif source == "pubchem":
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/property/IsomericSMILES/JSON"
-
         try:
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
-
-            return data["PropertyTable"]["Properties"][0]["IsomericSMILES"]
-        except requests.exceptions.RequestException as e:
-            return f"Error fetching data: {e}"
-        except (KeyError, IndexError):
-            return "CAS number not found or SMILES not available"
-    else:
-        return None
+            if "PropertyTable" in data and "Properties" in data["PropertyTable"]:
+                return data["PropertyTable"]["Properties"][0]["IsomericSMILES"]
+            return None
+        except (
+            requests.exceptions.RequestException,
+            KeyError,
+            IndexError,
+            json.JSONDecodeError,
+        ) as e:
+            logging.error(f"Error fetching data from PubChem: {e}")
+            return None
+    return None
