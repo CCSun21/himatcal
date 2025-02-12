@@ -32,14 +32,14 @@ documentation = "https://CCSun21.github.io/himatcal/"
 changelog = "https://github.com/CCSun21/himatcal/blob/main/CHANGELOG.md"
 
 [tool.poetry.group.molecule.dependencies]
-rdkit = "^2024.9.5"
+chemspipy = "^2.0.0"
 ipython = "^8.32.0"
 goodvibes = "^3.2"
+rdkit = "^2024.9.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^6.0.0"
 ruff = "^0.9.6"
-chemspipy = "^2.0.0"
 
 [tool.ruff]
 select = [
