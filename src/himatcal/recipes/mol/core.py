@@ -42,110 +42,45 @@ def sanitize_mol(mol):
         logging.warning("Input molecule is None")
         return None
 
-    # Store original atom formal charges using dictionary comprehension
-    original_charges = {
-        atom.GetIdx(): atom.GetFormalCharge() for atom in mol.GetAtoms()
-    }
-
     try:
-
-        def _process_atom(atom):
+        # Process each atom before any sanitization
+        for atom in mol.GetAtoms():
             symbol = atom.GetSymbol()
-
             if symbol == "F":
-                # Ensure fluorine has only one bond and -1 charge
+                # Remove all bonds except one
                 while atom.GetDegree() > 1:
                     bonds = atom.GetBonds()
                     mol.RemoveBond(bonds[0].GetBeginAtomIdx(), bonds[0].GetEndAtomIdx())
-                    logging.info(
-                        f"Removed extra bond from fluorine atom {atom.GetIdx()}"
-                    )
 
-                # Set fluorine to its typical -1 oxidation state
-                atom.SetFormalCharge(-1)
-                logging.info(f"Set fluorine atom {atom.GetIdx()} charge to -1")
+                # Clear any existing formal charge
+                atom.SetFormalCharge(0)
                 atom.UpdatePropertyCache(strict=False)
 
-            elif symbol in ["Cl", "Br", "I"]:
-                # Handle other halogens similarly
-                while atom.GetDegree() > 1:
-                    bonds = atom.GetBonds()
-                    mol.RemoveBond(bonds[0].GetBeginAtomIdx(), bonds[0].GetEndAtomIdx())
-                atom.UpdatePropertyCache(strict=False)
-
-        # Process atoms
-        for atom in mol.GetAtoms():
-            _process_atom(atom)
-
-        # Try to update properties with the new charge assignments
-        for atom in mol.GetAtoms():
-            atom.UpdatePropertyCache(strict=False)
-
-        # Perform basic cleanup
+        # Initial cleanup with minimal sanitization
         Chem.SanitizeMol(mol, sanitizeOps=Chem.SANITIZE_ADJUSTHS)
-        logging.info("Successfully adjusted hydrogens")
 
-        # Check overall molecule charge
-        total_charge = sum(atom.GetFormalCharge() for atom in mol.GetAtoms())
-        if total_charge != 0:
-            logging.warning(
-                f"Total molecular charge is {total_charge}, attempting to balance..."
-            )
-
-            # Try to find metal atoms or typical cation/anion formers to balance charge
-            for atom in mol.GetAtoms():
-                symbol = atom.GetSymbol()
-                if symbol in ["Na", "K", "Li", "Ca", "Mg"] and total_charge < 0:
-                    atom.SetFormalCharge(1)
-                    total_charge += 1
-                    if total_charge == 0:
-                        break
-
-        # Final sanitization steps
+        # Do a full sanitization without charges
         Chem.SanitizeMol(
-            mol, sanitizeOps=Chem.SANITIZE_SYMMRINGS | Chem.SANITIZE_CLEANUP
+            mol,
+            sanitizeOps=Chem.SANITIZE_SYMMRINGS
+            | Chem.SANITIZE_KEKULIZE
+            | Chem.SANITIZE_SETAROMATICITY
+            | Chem.SANITIZE_CLEANUP,
         )
 
-        # Verify final structure
-        for atom in mol.GetAtoms():
-            valence = atom.GetExplicitValence()
-            allowed = atom.GetImplicitValence()
-            if valence > allowed:
-                logging.warning(
-                    f"Atom {atom.GetSymbol()} {atom.GetIdx()} has valence {valence} "
-                    f"(allowed: {allowed}). Attempting to adjust..."
-                )
-                # Try to restore original charge if valence is invalid
-                original_charge = original_charges.get(atom.GetIdx(), 0)
-                atom.SetFormalCharge(original_charge)
-                atom.UpdatePropertyCache(strict=False)
-
-        # Final check of structure validity
-        Chem.SanitizeMol(mol, sanitizeOps=Chem.SANITIZE_ALL)
-
-        # Ensure fluorine charges are maintained
+        # Post-process charges
         for atom in mol.GetAtoms():
             if atom.GetSymbol() == "F":
-                atom.SetFormalCharge(-1)
-                atom.UpdatePropertyCache(strict=False)
+                atom.SetFormalCharge(0)  # Keep fluorine neutral for 3D embedding
+
+            # Update atom properties
+            atom.UpdatePropertyCache(strict=False)
 
         return mol
 
     except Exception as e:
-        logging.error(f"Sanitization failed: {e!s}")
-        try:
-            # Fallback: try to rebuild molecule with original charges
-            mol_block = Chem.MolToMolBlock(mol)
-            if new_mol := Chem.MolFromMolBlock(
-                mol_block, removeHs=False, sanitize=False
-            ):
-                for atom_idx, charge in original_charges.items():
-                    new_mol.GetAtomWithIdx(atom_idx).SetFormalCharge(charge)
-                new_mol.UpdatePropertyCache(strict=False)
-                return new_mol
-        except Exception as e:
-            logging.error(f"Failed to rebuild molecule: {e}")
-            return None
+        logging.error(f"Sanitization failed: {str(e)}")
+        return None
 
 
 def get_molecular_structure(

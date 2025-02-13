@@ -24,14 +24,27 @@ OBJ_OR_STR_OR_LIST = Union[OBJ_OR_STR, list[tuple[OBJ_OR_STR, float]]]
 
 def rdkit2ase(mol) -> Atoms:
     """Convert an RDKit molecule to an ASE atoms object."""
-    mol = Chem.AddHs(mol)
-    AllChem.EmbedMolecule(mol)
-    AllChem.UFFOptimizeMolecule(mol)
+    # Make a copy of the molecule to avoid modifying the original
+    mol = Chem.Mol(mol)
 
-    return Atoms(
-        positions=mol.GetConformer().GetPositions(),
-        numbers=[atom.GetAtomicNum() for atom in mol.GetAtoms()],
-    )
+    # Only add hydrogens if they're not already present
+    if any(atom.GetSymbol() == "H" for atom in mol.GetAtoms()):
+        mol = Chem.AddHs(mol, addCoords=True)
+    else:
+        mol = Chem.AddHs(mol)
+
+    # Only generate 3D coordinates if they don't exist
+    if mol.GetNumConformers() == 0:
+        AllChem.EmbedMolecule(mol)
+        AllChem.UFFOptimizeMolecule(mol)
+
+    # Get atomic numbers and formal charges
+    atomic_nums = []
+    atomic_nums.extend(atom.GetAtomicNum() for atom in mol.GetAtoms())
+    # Create ASE Atoms object with positions and atomic numbers
+    atoms = Atoms(positions=mol.GetConformer().GetPositions(), numbers=atomic_nums)
+
+    return atoms
 
 
 def ase2rdkit(atoms: Atoms, charge: int | None = None) -> Chem.Mol:
@@ -177,7 +190,7 @@ def pack(
     rng = np.random.default_rng(seed)
     selected_idx: list[np.ndarray] = []
 
-    for images, count in zip(data, counts):
+    for images, count in zip(data, counts, strict=False):
         selected_idx.append(
             rng.choice(range(len(images)), count, replace=len(images) < count)
         )
@@ -303,7 +316,6 @@ def mol_with_atom_and_bond_indices(smiles, output_file: str | None = None):
         ValueError: If the SMILES string is invalid
     """
     from rdkit import Chem
-    from rdkit.Chem.Draw import IPythonConsole
 
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
