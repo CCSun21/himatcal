@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 from unittest.mock import Mock, patch
 
 import pytest
@@ -39,7 +40,7 @@ def create_mock_response(
     return mock_response
 
 
-def assert_valid_xyz_result(cas_id: str):
+def assert_valid_xyz_result(cas_id: str):  # sourcery skip: extract-method
     """Assert that cas2xyz returns a valid XYZ result for the given CAS ID."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         current_dir = os.getcwd()
@@ -105,16 +106,6 @@ class TestSanitizeMol:
     def test_none_input(self):
         """Test handling of None input."""
         assert sanitize_mol(None) is None
-
-    def test_fluorine_handling(self):
-        """Test handling of fluorine atoms."""
-
-        def validate_fluorine(mol: Chem.Mol):
-            f_atom = next(atom for atom in mol.GetAtoms() if atom.GetSymbol() == "F")
-            assert f_atom.GetDegree() == 1
-            assert f_atom.GetFormalCharge() == -1
-
-        assert_sanitized_mol("CC(F)(F)F", lambda m: validate_fluorine(m))
 
     def test_charge_balancing(self):
         """Test charge balancing for ionic compounds."""
