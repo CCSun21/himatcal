@@ -41,6 +41,10 @@ rdkit = "^2024.9.5"
 pytest-cov = "^6.0.0"
 ruff = "^0.9.6"
 
+[project.scripts]
+himatcal = "himatcal._cli.cli:app"
+pubgrep = "himatcal.recipes.mol.pubgrep:cli"
+
 [tool.ruff]
 select = [
     "A",     # flake8-builtins
