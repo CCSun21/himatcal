@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "himatcal"
-version = "0.1.7"
+version = "0.1.8"
 description = "High throughput material calculation"
 authors = [{ name = "Congcong Sun", email = "suncongcong000@foxmail.com" }]
 license = { text = "BSD-3" }
