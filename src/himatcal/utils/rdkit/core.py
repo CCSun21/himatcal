@@ -41,10 +41,7 @@ def rdkit2ase(mol) -> Atoms:
     # Get atomic numbers and formal charges
     atomic_nums = []
     atomic_nums.extend(atom.GetAtomicNum() for atom in mol.GetAtoms())
-    # Create ASE Atoms object with positions and atomic numbers
-    atoms = Atoms(positions=mol.GetConformer().GetPositions(), numbers=atomic_nums)
-
-    return atoms
+    return Atoms(positions=mol.GetConformer().GetPositions(), numbers=atomic_nums)
 
 
 def ase2rdkit(atoms: Atoms, charge: int | None = None) -> Chem.Mol:
