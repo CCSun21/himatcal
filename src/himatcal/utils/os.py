@@ -125,7 +125,7 @@ def extract_fchk(label, dzip=False):
     logging.info(f"fchk file extracted for {label}")
 
 
-@persist
+@persist(max_age=1)
 def parse_logfile(logfile: str):
     """
     Parses a Gaussian log file to extract computational chemistry data.

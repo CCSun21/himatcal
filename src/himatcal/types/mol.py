@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-
 from pydantic import BaseModel, field_validator
 
 
@@ -10,6 +8,8 @@ class CASNumber(BaseModel):
 
     @field_validator("cas_number")
     def validate_cas_number(cls, value):
+        import re
+
         """Validate CAS number format and length."""
         # 验证基本格式
         pattern = re.compile(r"^\d{2,7}-\d{2}-\d{1}$")

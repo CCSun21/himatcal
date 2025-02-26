@@ -325,5 +325,57 @@ def draw_molecule(
         raise typer.Exit(1)
 
 
+@app.command(
+    "smi2conf",
+    help="Convert SMILES string to XYZ file",
+    no_args_is_help=True,
+)
+def smi2conf(
+    smiles: Annotated[str, typer.Argument(help="SMILES string of the molecule")],
+    output: Annotated[
+        str, typer.Option("--output", "-o", help="Output file name (XYZ format)")
+    ] = "molecule.xyz",
+):
+    from himatcal.utils.rdkit.core import smiles2atoms
+
+    Path().mkdir(exist_ok=True)
+    file_path = Path(f"{output}")
+    try:
+        atoms = smiles2atoms(smiles)
+        atoms.write(file_path)
+        return True
+    except Exception as e:
+        print(f"Error converting SMILES to atoms: {e}")
+        return False
+
+
+@app.command(
+    "relax_mol",
+    help="Relax a molecule using CREST",
+    no_args_is_help=True,
+)
+def relax_mol(
+    file,
+    chg: int = 0,
+    mult: int = 1,
+    output: Annotated[
+        str, typer.Option("--output", "-o", help="Output file name (XYZ format)")
+    ] = "molecule_relaxed.xyz",
+):
+    """
+    Relax a molecule using CREST
+    """
+    from himatcal.recipes.crest.core import relax
+
+    try:
+        atoms_path = Path(f"{file}")
+        atoms = relax(read(atoms_path.absolute()), chg, mult)
+        atoms.write(f"{output}")
+        return True
+    except Exception as e:
+        print(f"Error relaxing molecule: {e}")
+        return False
+
+
 if __name__ == "__main__":
     app()

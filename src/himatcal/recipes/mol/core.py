@@ -254,6 +254,7 @@ def cas2xyz(CAS_ID: str, relax_atoms: bool = True) -> str | None:
         f"https://www.chemicalbook.com/CAS/20210111/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20180601/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20180713/MOL/{CAS_ID}.mol",
+        f"https://www.chemicalbook.com/CAS/20180808/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20150408/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20200515/MOL/{CAS_ID}.mol",
         f"https://www.chemicalbook.com/CAS/20211123/MOL/{CAS_ID}.mol",
@@ -415,6 +416,16 @@ def relax_mol(mol: Atoms, chg: int = 0, mult: int = 1, method: str = "crest", **
     """
     if method == "crest":
         return crest_relax(mol, chg=chg, mult=mult, **kwargs)
+    elif method == "optrs":
+        from himatcal.recipes.optrs.core import relax as optrs_relax
+
+        return optrs_relax(mol)
+    elif method == "orca":
+        from himatcal.recipes.orca.core import relax_job as orca_relax
+
+        orca_result = orca_relax(mol, charge=chg, spin_multiplicity=mult, **kwargs)
+
+        return orca_result.atoms
     else:
         raise ValueError(f"Relaxation method '{method}' is not supported")
 
@@ -426,28 +437,30 @@ class CASNumber(BaseModel):
     def validate_cas_number(cls, value):
         """Validate CAS number format and length."""
         # 验证基本格式
-        pattern = re.compile(r"^\d{2,6}-\d{2}-\d{1}$")
+        pattern = re.compile(r"^\d{2,7}-\d{2}-\d{1}$")
         if not re.match(pattern, value):
             raise ValueError(
-                "Invalid CAS number format. It should be 2-6 digits followed by a hyphen, then 2 digits, and another hyphen followed by 1 digit."
+                "Invalid CAS number format. It should be 2-7 digits followed by a hyphen, then 2 digits, and another hyphen followed by 1 digit."
             )
 
         # 验证第一部分的长度
         parts = value.split("-")
-        if len(parts[0]) > 6:  # 检查第一部分是否超过6位数字
-            raise ValueError("Invalid CAS number: first part cannot exceed 6 digits")
+        if len(parts[0]) > 7:  # 检查第一部分是否超过7位数字
+            raise ValueError("Invalid CAS number: first part cannot exceed 7 digits")
 
         # 验证整体长度
         total_digits = sum(len(part) for part in parts)
-        if total_digits > 9:  # CAS号的数字总数不应超过9位
-            raise ValueError("Invalid CAS number: total length cannot exceed 9 digits")
+        if total_digits > 10:  # CAS号的数字总数不应超过10位
+            raise ValueError("Invalid CAS number: total length cannot exceed 10 digits")
 
         return value
 
 
-def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"):
+def cas_to_smiles(
+    cas_number: str, source: Literal["auto", "pubchem", "cirpy"] = "auto"
+):
     """
-    convert cas to smiles using nci api
+    convert cas to smiles using nci api, with fallback options
     """
     try:
         # * validize the cas_number
@@ -455,17 +468,22 @@ def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"
     except ValueError:
         return None
 
-    if source == "cirpy":
+    if source in ["auto", "cirpy"]:
         url = f"https://cactus.nci.nih.gov/chemical/structure/{cas_number}/smiles"
         try:
             response = requests.get(url)
             response.raise_for_status()
             smiles = response.text.strip()
-            return smiles or None
+            if smiles:
+                return smiles
+            if source == "cirpy":
+                return None
         except requests.exceptions.RequestException as e:
-            logging.error(f"Error fetching data for CAS {cas_number}: {e}")
-            return None
-    elif source == "pubchem":
+            logging.error(f"Error fetching data for CAS {cas_number} from cirpy: {e}")
+            if source == "cirpy":
+                return None
+
+    if source in ["auto", "pubchem"]:
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{cas_number}/property/IsomericSMILES/JSON"
         try:
             response = requests.get(url)
@@ -473,7 +491,6 @@ def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"
             data = response.json()
             if "PropertyTable" in data and "Properties" in data["PropertyTable"]:
                 return data["PropertyTable"]["Properties"][0]["IsomericSMILES"]
-            return None
         except (
             requests.exceptions.RequestException,
             KeyError,
@@ -481,5 +498,5 @@ def cas_to_smiles(cas_number: str, source: Literal["pubchem", "cirpy"] = "cirpy"
             json.JSONDecodeError,
         ) as e:
             logging.error(f"Error fetching data from PubChem: {e}")
-            return None
+
     return None

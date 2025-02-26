@@ -46,7 +46,9 @@ def relax(
     Raises:
         FileNotFoundError: If the output file "crestopt.xyz" is not found after optimization.
     """
-    scratch_folder = Path(f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}")
+    scratch_folder = Path(
+        f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    )
     Path.mkdir(scratch_folder)
     with cd(scratch_folder):
         atoms_name = "input.xyz"
@@ -73,6 +75,7 @@ def relax(
             )
             return None
 
+
 def iMTD_GC(
     atoms: Atoms,
     chg: int = 0,
@@ -82,7 +85,9 @@ def iMTD_GC(
     topo_change: bool = False,
     threads: int = 16,
 ):
-    scratch_folder = Path(f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}")
+    scratch_folder = Path(
+        f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    )
     Path.mkdir(scratch_folder)
     with cd(scratch_folder):
         atoms_name = "input.xyz"
@@ -114,6 +119,7 @@ def iMTD_GC(
             )
             return None
 
+
 def protonate(
     atoms: Atoms,
     ion: str = "li+",
@@ -126,7 +132,9 @@ def protonate(
     """
     Protonate a structure using CREST, default is to protonate with Li
     """
-    scratch_folder = Path(f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}")
+    scratch_folder = Path(
+        f"crest_opt_{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S-%f')}"
+    )
     Path.mkdir(scratch_folder)
     with cd(scratch_folder):
         atoms_name = "input.xyz"
