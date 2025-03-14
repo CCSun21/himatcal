@@ -3,17 +3,26 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import matgl
 from ase import Atoms
 from ase.io import read, write
 from ase.mep import NEB, NEBTools
 from ase.optimize import FIRE
-from matgl.ext.ase import M3GNetCalculator, Relaxer
-from pathos.multiprocessing import ProcessingPool as Pool
 from pymatgen.core import Structure
 from pymatgen.io.cif import CifParser
 
 from himatcal.recipes.materials.core import ase_to_pymatgen, pymatgen_to_ase
+
+try:
+    import matgl
+    from matgl.ext.ase import M3GNetCalculator, Relaxer
+except ImportError as err:
+    raise ImportError("请安装matgl库: pip install matgl") from err
+
+try:
+    from pathos.multiprocessing import ProcessingPool as Pool
+except ImportError as err:
+    raise ImportError("请安装pathos库: pip install pathos") from err
+
 
 Logger = logging.getLogger(__name__)
 
@@ -228,7 +237,7 @@ class DiffusionBarrierCal:
             logging.error(f"Error: neb calculation of image {neb_path_floder} failed.")
 
         ## * 3. get the neb barrier
-        traj = read(f"{neb_path_floder}/neb.traj@-{self.neb_point_number+2}:")
+        traj = read(f"{neb_path_floder}/neb.traj@-{self.neb_point_number + 2}:")
         result = []
         for j in traj:
             j.calc = calc
@@ -239,7 +248,7 @@ class DiffusionBarrierCal:
         Ef, dE = nebtools.get_barrier()
 
         ## * 4. write the Ea to Ea.txt
-        Path.open(Path(f"{neb_path_floder}/Ea.txt"), "w").write(f"{Ef-dE}")
+        Path.open(Path(f"{neb_path_floder}/Ea.txt"), "w").write(f"{Ef - dE}")
 
     def extract_results(self, neb_path_floders: list):
         """

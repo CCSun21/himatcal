@@ -104,7 +104,7 @@ class ElectrolyteBuilder:
             box_electrolyte = mb.packing.fill_box(
                 compound=box_compound,
                 n_compounds=box_n_compounds,
-                density=density *1000,# kg/m^3
+                density=density * 1000,  # kg/m^3
                 # ratio=[1,1,1],
                 box=box,
             )

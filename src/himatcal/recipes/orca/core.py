@@ -88,3 +88,34 @@ def bare_job(
         additional_fields=additional_fields,
         copy_files=copy_files,
     )
+
+
+@job
+def relax_job(
+    atoms: Atoms,
+    charge: int = 0,
+    spin_multiplicity: int = 1,
+    xc: str = "b97-3c",
+    basis: str = "def2-tzvp",
+    orcasimpleinput: list[str] | None = None,
+    orcablocks: list[str] | None = None,
+    nprocs: int | Literal["max"] | None = "max",
+    copy_files: SourceDirectory | dict[SourceDirectory, Filenames] | None = None,
+    additional_fields: dict[str, Any] | None = None,
+) -> RunSchema:
+    additional_fields = {"name": "ORCA Relax"} | (additional_fields or {})
+    nprocs = psutil.cpu_count(logical=False) if nprocs in ["max", None] else nprocs
+    default_inputs = [xc, basis, "opt", "freq"]
+    default_blocks = [f"%pal nprocs {nprocs} end"]
+
+    return run_and_summarize(
+        atoms,
+        charge,
+        spin_multiplicity,
+        default_inputs=default_inputs,
+        default_blocks=default_blocks,
+        input_swaps=orcasimpleinput,
+        block_swaps=orcablocks,
+        additional_fields=additional_fields,
+        copy_files=copy_files,
+    )
