@@ -21,5 +21,5 @@ H       -0.04583000       1.73029300      -0.44740100      -0.03207374      -0.1
 H       -0.47170400       1.37439200       1.25140400       0.06537221      -0.10877839      -0.11207558
 """
 atoms = read(StringIO(EC_content), format="xyz")
-result = genFF(atoms=atoms, label="EC")  # type: ignore
+result = genFF(atoms=atoms, chg=0, mult=1, label="EC")  # type: ignore
 logging.info(result)
