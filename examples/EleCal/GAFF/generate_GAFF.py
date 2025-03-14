@@ -1,4 +1,13 @@
-10
+from __future__ import annotations
+
+import logging
+from io import StringIO
+
+from ase.io import read
+
+from himatcal.recipes.electrolyte.sol_stru.genFF import genFF
+
+EC_content = """10
 Properties=species:S:1:pos:R:3:forces:R:3 energy=-9321.852481102218 dipole="1.41106944733541 -0.00015531102152171168 -8.43081946223504e-06" pbc="F F F"
 O        0.50801100      -1.10125200      -0.55463400      -0.77792584      -0.26927006      -0.31158209
 O       -1.31822900       0.12740500      -0.15678700      -0.07581562      -0.76088544      -0.44049999
@@ -10,3 +19,7 @@ H        1.88910600       0.32951300      -0.00692600      -0.16716568      -0.0
 H        1.06659600      -0.50336100       1.34357900      -0.05533287       0.03700712      -0.14736341
 H       -0.04583000       1.73029300      -0.44740100      -0.03207374      -0.14191508       0.07090815
 H       -0.47170400       1.37439200       1.25140400       0.06537221      -0.10877839      -0.11207558
+"""
+atoms = read(StringIO(EC_content), format="xyz")
+result = genFF(atoms=atoms, label="EC")  # type: ignore
+logging.info(result)
