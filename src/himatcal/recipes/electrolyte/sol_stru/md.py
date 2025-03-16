@@ -207,6 +207,7 @@ slurm_title = """#!/bin/bash
 #SBATCH -n 4  ##每节点进程数
 
 source /usr/local/gromacs/bin/GMXRC.bash
+export OMP_NUM_THREADS=2
 """
 
 

@@ -14,6 +14,9 @@ class ElectrolyteBuilder:
         self.DMC = mb.load(str(self.mol_path / "DMC.pdb"))
         self.Li = mb.load(str(self.mol_path / "Li.pdb"))
         self.PF6 = mb.load(str(self.mol_path / "PF6.pdb"))
+        self.FSI = mb.load(str(self.mol_path / "FSI.pdb"))
+        self.VC = mb.load(str(self.mol_path / "VC.pdb"))
+
         if mol_name_list:
             for mol_name in mol_name_list:
                 setattr(self, mol_name, mb.load(str(self.mol_path / f"{mol_name}.pdb")))

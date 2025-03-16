@@ -20,10 +20,7 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 requires-python = ">=3.10,<3.13"
-dependencies = [
-    "pandas>=2.2.3",
-    "quacc>=0.12.1",
-]
+dependencies = ["pandas>=2.2.3", "quacc>=0.12.1"]
 
 [project.urls]
 repository = "https://github.com/CCSun21/himatcal"
@@ -37,9 +34,22 @@ molecule = [
     "ipython>=8.32.0",
     "rdkit>=2024.9.5",
 ]
-dev = [
-    "pytest-cov>=6.0.0",
-    "ruff>=0.9.6",
+dev = ["pytest-cov>=6.0.0", "ruff>=0.9.6"]
+md = [
+    "boltons>=25.0.0",
+    "ele>=0.2.0",
+    "foyer",
+    "gmso",
+    "importlib-resources>=6.5.2",
+    "lark>=1.2.2",
+    "lxml>=5.3.1",
+    "mbuild",
+    "mdtraj>=1.10.3",
+    "openmm>=8.2.0",
+    "parmed>=4.3.0",
+    "symengine>=0.14.0",
+    "treelib>=1.7.1",
+    "unyt>=3.0.4",
 ]
 
 [project.scripts]
@@ -110,3 +120,8 @@ extend-include = ["*.ipynb"]
 [tool.docformatter]
 pre-summary-newline = true
 black = true
+
+[tool.uv.sources]
+mbuild = { git = "https://github.com/mosdef-hub/mbuild.git" }
+gmso = { git = "https://github.com/mosdef-hub/gmso.git" }
+foyer = { git = "https://github.com/mosdef-hub/foyer.git" }
