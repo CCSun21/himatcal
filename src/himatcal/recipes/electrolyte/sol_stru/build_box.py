@@ -161,6 +161,8 @@ class ElectrolyteBuilder:
                     "DMC": 90.08,
                     "Li": 6.94,
                     "PF6": 144.96,
+                    "VC": 86.046,
+                    "FSI": 180.07,
                     # 添加其他分子的分子量
                 }
 

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-from himatcal.recipes.electrolyte.sol_stru.build_box import ElectrolyteBuilder
 from himatcal.recipes.electrolyte.sol_stru.md import (
     gmx_solvation_md,
 )
