@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel, field_validator
 
 
-class CASNumber(BaseModel):
+class CASNumber(BaseModel):  # AI!
     cas_number: str
 
     @field_validator("cas_number")
