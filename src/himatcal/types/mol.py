@@ -5,13 +5,14 @@ from pydantic import BaseModel, field_validator
 
 class CASNumber(BaseModel):
     """CAS number validation class (AI-generated).
-    
+
     Validates Chemical Abstracts Service (CAS) registry numbers according to standard format:
     - 2-7 digits followed by a hyphen
-    - Then 2 digits and another hyphen 
+    - Then 2 digits and another hyphen
     - Finally 1 digit
     - Total digits cannot exceed 10
     """
+
     cas_number: str
 
     @field_validator("cas_number")

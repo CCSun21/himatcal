@@ -79,3 +79,4 @@ try/# pixi environments
 ard_gsm/
 ard_gsm/ard_gsm/
 project/
+.aider*

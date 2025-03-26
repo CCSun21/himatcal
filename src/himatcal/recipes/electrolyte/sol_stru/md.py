@@ -204,7 +204,8 @@ continuation              = yes            ; restart from NVT
 slurm_title = """#!/bin/bash
 #SBATCH -J gmx   ##作业名
 #SBATCH -p normal   ##队列
-#SBATCH -n 4  ##每节点进程数
+#SBATCH -n 16  ##每节点进程数
+#SBATCH --cpus-per-task=2  ##每任务CPU数
 
 source /usr/local/gromacs/bin/GMXRC.bash
 export OMP_NUM_THREADS=2
@@ -217,7 +218,7 @@ def slurm_min(pre_step: str = "init.pdb", current_step: str = "min") -> str:
 gmx editconf -f {pre_step} -o conf.gro
 gmx grompp -f {current_step}.mdp -o {current_step}.tpr
 ## run gromacs
-mpirun -np 2 gmx mdrun -nt 4 -ntomp 2 -deffnm min
+gmx mdrun -nt 16 -ntomp 2 -deffnm min -s min.tpr -rdd 1.0 -pin on
 
 """
 
@@ -227,7 +228,7 @@ def slurm_md(pre_step: str = "min", current_step: str = "nvt1") -> str:
 ## generate the tpr file for gromacs
 gmx grompp -f {current_step}.mdp -c {pre_step}.gro -o {current_step}.tpr
 ## run gromacs
-mpirun -np 2 gmx mdrun -nt 4 -ntomp 2 -v -deffnm {current_step}
+gmx mdrun -nt 16 -ntomp 2 -deffnm {current_step} -s {current_step}.tpr -rdd 1.0 -pin on
 
 """
 
