@@ -133,12 +133,12 @@ class Atom:
 
     def set_atomic_number(self, atomic_number):
         self.atomic_number = atomic_number
-        self.element = periodic_table[atomic_number - 1]
+        self.element = Atom.periodic_table[atomic_number - 1]
 
     def set_element(self, element):
         """Type of an atom. e.g. 'C', 'H', 'O', and so on."""
         self.element = element
-        self.atomic_number = periodic_table.index(element) + 1
+        self.atomic_number = Atom.periodic_table.index(element) + 1
 
     def set_coordinate(self, position):
         """Set Cartesian coordinates of an atom"""
@@ -173,8 +173,8 @@ class Atom:
                 end_part = str.lower(end_part)
                 element = element[0] + end_part
                 self.element = element
-            if element in periodic_table:
-                index = periodic_table.index(element)
+            if element in Atom.periodic_table:
+                index = Atom.periodic_table.index(element)
                 self.atomic_number = index + 1
             else:
                 print("element", element)
@@ -195,7 +195,7 @@ class Atom:
             if atomic_number == None:
                 print("atom is not specified!")
             z = int(self.atomic_number) - 1
-            self.element = periodic_table[z]
+            self.element = Atom.periodic_table[z]
         return self.element
 
     def get_coordinate(self):
