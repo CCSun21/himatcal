@@ -233,7 +233,7 @@ gmx mdrun -nt 16 -ntomp 2 -deffnm {current_step} -s {current_step}.tpr -rdd 1.0 
 """
 
 
-def gmx_min(pdb_file: str, submit_job=False, **calc_kwards) -> None:
+def gmx_min(pdb_file: str, submit_job=False) -> None:
     """
     Run Gromacs minimization
     """
@@ -262,7 +262,7 @@ def gmx_min(pdb_file: str, submit_job=False, **calc_kwards) -> None:
         subprocess.run(["sbatch", str(slurm_path)], check=True, text=True)
 
 
-def gmx_write_topo(compound_dict, itp_folder: str = None) -> None:
+def gmx_write_topo(compound_dict, itp_folder: str | None = None) -> None:
     with Path("topol.top").open("w") as f:
         f.write("[ defaults ]\n")
         f.write("  ;nbfunc  comb-rule  gen-pairs  fudgeLJ  fudgeQQ\n")
@@ -348,5 +348,5 @@ def gmx_solvation_md(yaml_file, submit_job=False):
             ["sbatch", str(slurm_path)], check=True, text=True, capture_output=True
         )
         # Extract job ID from stdout (format: "Submitted batch job 12345")
-        job_id = result.stdout.strip().split()[-1]
-        return job_id
+        return result.stdout.strip().split()[-1]
+    return None
