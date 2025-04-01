@@ -347,5 +347,6 @@ def gmx_solvation_md(yaml_file, submit_job=False):
         result = subprocess.run(
             ["sbatch", str(slurm_path)], check=True, text=True, capture_output=True
         )
-        # print(result.stdout)
-        # print(result.stderr)  # TODO: capture the slurm job id and return it. AI!
+        # Extract job ID from stdout (format: "Submitted batch job 12345")
+        job_id = result.stdout.strip().split()[-1]
+        return job_id
