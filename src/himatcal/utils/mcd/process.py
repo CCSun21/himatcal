@@ -7,12 +7,12 @@ from __future__ import annotations
 
 
 def locate_molecule(ace_molecule, coordinate_list):
-    """Locates atoms according to coordinate_list, be cautious on ordering of atoms
+    """Locates atoms according to coordinate_list. Note: Atom ordering matters.
     Args:
         |  ace_molecule (<class 'Molecule'>): class instance of Molecule
-        |  coordinate_list (list of list (x,y,z)): list of 3d coordinate, where each x,y,z are float type
+        |  coordinate_list (list of list (x,y,z)): list of 3d coordinates, where each x,y,z are float type
     Returns:
-        |  No return, it direcly modifies the geometry of a given molecule
+        |  None: Directly modifies the geometry of the given molecule
     """
     atom_list = ace_molecule.atom_list
     for i in range(len(atom_list)):

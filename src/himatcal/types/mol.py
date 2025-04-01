@@ -20,21 +20,21 @@ class CASNumber(BaseModel):
         import re
 
         """Validate CAS number format and length."""
-        # 验证基本格式
+        # Validate basic format
         pattern = re.compile(r"^\d{2,7}-\d{2}-\d{1}$")
         if not re.match(pattern, value):
             raise ValueError(
                 "Invalid CAS number format. It should be 2-7 digits followed by a hyphen, then 2 digits, and another hyphen followed by 1 digit."
             )
 
-        # 验证第一部分的长度
+        # Validate first part length
         parts = value.split("-")
-        if len(parts[0]) > 7:  # 检查第一部分是否超过7位数字
+        if len(parts[0]) > 7:  # Check if first part exceeds 7 digits
             raise ValueError("Invalid CAS number: first part cannot exceed 7 digits")
 
-        # 验证整体长度
+        # Validate total length
         total_digits = sum(len(part) for part in parts)
-        if total_digits > 10:  # CAS号的数字总数不应超过10位
+        if total_digits > 10:  # Total digits in CAS number should not exceed 10
             raise ValueError("Invalid CAS number: total length cannot exceed 10 digits")
 
         return value
