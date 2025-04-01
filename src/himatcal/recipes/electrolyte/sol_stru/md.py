@@ -348,4 +348,4 @@ def gmx_solvation_md(yaml_file, submit_job=False):
             ["sbatch", str(slurm_path)], check=True, text=True, capture_output=True
         )
         # print(result.stdout)
-        # print(result.stderr)  # TODO: capture the slurm job id and return it
+        # print(result.stderr)  # TODO: capture the slurm job id and return it. AI!
