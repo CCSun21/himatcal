@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,8 @@ from himatcal.utils.mcd import chem, mcd
 if TYPE_CHECKING:
     from ase import Atoms
 
+logger = logging.getLogger(__name__)
+
 
 class MCD_runner:
     def __init__(
@@ -15,7 +18,8 @@ class MCD_runner:
         atoms: Atoms,
         chg: int = 0,
         mult: int = 1,
-        driving_coords: list | None = None,  # atoms' index, target bondlength, step, [[1, 8, 2.1, 5]]
+        driving_coords: list
+        | None = None,  # atoms' index, target bondlength, step, [[1, 8, 2.1, 5]]
         qcsoft: str = "gaussian",
         command: str = "g16",
         calc_kwargs: str = "#N B3LYP/6-311+g* em=GD3BJ scf(xqc) scrf(iefpcm, solvent=acetone)",
@@ -79,11 +83,10 @@ class MCD_runner:
 
             calculator = Orca(self.command)
         else:
-            print(
+            logger.error(
                 f"Wrong calculator (={self.qcsoft}) is given! Check the option file !!!"
             )
-            calculator = None
-            return calculator
+            return None
         calculator.content = self.calc_kwargs
         # basis_file = os.path.join(args.input_directory,'basis') # For Effective Core Potential
         # if os.path.exists(basis_file):
@@ -100,11 +103,10 @@ class MCD_runner:
         scanner.step_size = self.step_size
         scanner.log_directory = self.output_directory
         scanner.change_working_directory(self.working_directory)
-        pathway = scanner.scan(
+        return scanner.scan(
             reactant,
             constraints,
             num_steps,
             chg=self.chg,
             multiplicity=self.mult,
         )
-        return pathway
