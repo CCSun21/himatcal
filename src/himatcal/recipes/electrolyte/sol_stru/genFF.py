@@ -121,15 +121,13 @@ def genFF(atoms: Atoms, chg: int = 0, mult: int = 1, label="mol"):
     fchkfile_path = formchk(chkfile_path)
     sobtop_genFF(str(fchkfile_path))
     logging.info(f"GAFF force field generated for {atoms.get_chemical_formula()}")
-    # copy the gro,pdb,top and itp files to the current directory
-    for suffix in [
-        "gro",
-        "pdb",
-        "top",
-        "itp",
-    ]:  # create a folder with the label name, and move the files there AI!
+    # Create output folder and move files there
+    output_dir = Path(label)
+    output_dir.mkdir(exist_ok=True)
+
+    for suffix in ["gro", "pdb", "top", "itp"]:
         source = chkfile_path.with_suffix(f".{suffix}")
-        target = Path(f"{label}.{suffix}")
+        target = output_dir / f"{label}.{suffix}"
         source.replace(target)
     return {
         "atoms": atoms,
