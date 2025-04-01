@@ -249,8 +249,7 @@ def GSM(
     Path.mkdir(cache_path, exist_ok=True)
     atoms = [read(Path(file))]
     if calc == "xtb":
-        from xtb_ase import XTB
-
+        from himatcal.calculator.xtb import XTB
         from himatcal.recipes.gsm.SE_GSM import ASE_SE_GSM
 
         gsm = ASE_SE_GSM(

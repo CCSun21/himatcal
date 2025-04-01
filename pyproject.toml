@@ -20,7 +20,10 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 requires-python = ">=3.10,<3.13"
-dependencies = ["pandas>=2.2.3", "quacc>=0.12.1"]
+dependencies = [
+    "pandas>=2.2.3",
+    "quacc>=0.12.1",
+]
 
 [project.urls]
 repository = "https://github.com/CCSun21/himatcal"

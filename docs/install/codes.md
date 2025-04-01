@@ -1,10 +1,9 @@
 # Extra Codes
 
-## xtb and xtb_ase
+## xtb
 
 ```sh
 micromamba install -c conda-forge xtb
-uv pip install git+https://github.com/Quantum-Accelerators/xtb_ase.git
 ```
 
 ## pysisyphus

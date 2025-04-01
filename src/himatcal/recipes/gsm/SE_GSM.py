@@ -48,7 +48,7 @@ class ASE_SE_GSM:
         self.driving_coords = driving_coords  # List: driving_coords = [["BREAK", 2, 3]]
         self.multiplicity = multiplicity
         if calculator is None:
-            from xtb_ase import XTB
+            from himatcal.calculator.xtb import XTB
 
             calculator = XTB()
         self.calculator = calculator

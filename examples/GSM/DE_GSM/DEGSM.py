@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from ase.io import read
 from monty.os import cd
-from xtb_ase import XTB
 
+from himatcal.calculator.xtb import XTB
 from himatcal.recipes.gsm.DE_GSM import ASE_DE_GSM
 from himatcal.utils.os import labeled_dir
 

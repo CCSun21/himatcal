@@ -20,7 +20,7 @@ driving_coords = [["BREAK", 1, 4]]
 _CWD = labeled_dir(main_workdir, label)
 
 ######### *  xTB example    ###############
-from xtb_ase import XTB
+from himatcal.calculator.xtb import XTB
 
 calc = XTB(method="gfn2-xTB", charge=-1, uhf=0, gbsa={"solvent": "acetone"})
 
