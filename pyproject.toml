@@ -54,6 +54,9 @@ md = [
     "treelib>=1.7.1",
     "unyt>=3.0.4",
 ]
+mlp = [
+    "mace>=1.1.2",
+]
 
 [project.scripts]
 himatcal = "himatcal._cli.cli:app"
