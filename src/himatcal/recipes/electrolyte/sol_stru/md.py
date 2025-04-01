@@ -202,10 +202,10 @@ continuation              = yes            ; restart from NVT
 """
 
 slurm_title = """#!/bin/bash
-#SBATCH -J gmx   ##作业名
-#SBATCH -p normal   ##队列
-#SBATCH -n 16  ##每节点进程数
-#SBATCH --cpus-per-task=2  ##每任务CPU数
+#SBATCH -J gmx             # job name
+#SBATCH -p normal          # queue
+#SBATCH -n 16              # processes per node
+#SBATCH --cpus-per-task=2  # CPUs per task
 
 source /usr/local/gromacs/bin/GMXRC.bash
 export OMP_NUM_THREADS=2
