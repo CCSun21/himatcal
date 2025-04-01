@@ -203,12 +203,12 @@ class Atom:
 
     def get_mass(self):
         """
-        Returns the exact value (float) of an atomic mass of a given atom.
+        Returns the exact atomic mass (float) of the given atom.
 
-        :param:
+        :param: None
 
         :return float:
-            Directly the atomic mass of a given atom is returned
+            Atomic mass of the given atom
         """
         element = self.get_element()
         a = str.lower(element)
@@ -277,12 +277,13 @@ class Atom:
 
     def get_radius(self):
         """
-        Returns a radius information of a given atom. Reference is given here: Dalton Trans., 2008, 2832-2838
+        Returns the atomic radius of the given atom.
+        Reference: Dalton Trans., 2008, 2832-2838
 
-        :param:
+        :param: None
 
         :return float:
-            It directly returns the reference values
+            Atomic radius value from reference data
         """
         element = self.get_element()
         a = str.lower(element)
