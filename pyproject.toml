@@ -1,9 +1,9 @@
 [project]
 name = "himatcal"
-version = "0.1.8"
+version = "0.1.9"
 description = "High throughput material calculation"
 authors = [{ name = "Congcong Sun", email = "suncongcong000@foxmail.com" }]
-license = { text = "BSD-3" }
+license = { text = "BSD-3-Clause" }
 readme = "README.md"
 classifiers = [
     "Development Status :: 3 - Alpha",
